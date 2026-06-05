@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PT Live Design — Venture Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+ --ink:#16140f;--paper:#f4efe2;--paper2:#ece5d3;--card:#fbf8ef;--hair:#d4cdb9;
+ --red:#d6402c;--blue:#1f4ed8;--yellow:#f2b705;--green:#1f9d55;--muted:#6f6857;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Archivo',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.45;
+ background-image:linear-gradient(var(--hair) 1px,transparent 1px),linear-gradient(90deg,var(--hair) 1px,transparent 1px);
+ background-size:34px 34px;background-position:-1px -1px;padding-bottom:90px}
+.mono{font-family:'Space Mono',monospace}
+.wrap{max-width:1300px;margin:0 auto;padding:18px 16px}
+/* header */
+header{border:3px solid var(--ink);background:var(--paper);margin-bottom:16px;overflow:hidden}
+.hbar{display:flex;align-items:stretch}
+.hmark{width:54px;border-right:3px solid var(--ink);background:var(--yellow);position:relative;flex:none}
+.hmark::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,var(--red) 0 17%,transparent 17%),linear-gradient(var(--blue) 0 0) bottom/100% 33% no-repeat}
+.htitle{flex:1;padding:12px 16px}
+.htitle h1{font-family:'Archivo Black';font-size:clamp(18px,3vw,28px);line-height:.95;text-transform:uppercase;letter-spacing:-.5px}
+.htitle .sub{font-family:'Space Mono';font-size:10px;letter-spacing:1px;color:var(--muted);margin-top:5px;text-transform:uppercase}
+.hbtns{display:flex;gap:0;border-left:3px solid var(--ink);flex:none}
+.hbtns button{border:none;border-right:1px solid var(--hair);background:var(--paper2);font-family:'Space Mono';font-size:10px;font-weight:700;padding:0 12px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+.hbtns button:last-child{border-right:none}
+.hbtns button:hover{background:var(--ink);color:var(--paper)}
+/* nav */
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.nav-btn{font-family:'Space Mono';font-size:12px;font-weight:700;border:2px solid var(--ink);background:var(--paper);padding:8px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:.12s}
+.nav-btn:hover{transform:translate(-1px,-1px);box-shadow:2px 2px 0 var(--ink)}
+.nav-btn.on{background:var(--ink);color:var(--paper)}
+.view{display:none}.view.on{display:block}
+/* generic card */
+.card{border:3px solid var(--ink);background:var(--card);margin-bottom:14px}
+.card-h{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:3px solid var(--ink);background:var(--paper2)}
+.cdot{width:14px;height:14px;border:2px solid var(--ink);flex:none}
+.card-h h3{font-family:'Archivo Black';font-size:13px;text-transform:uppercase}
+.card-h .code{font-family:'Space Mono';font-size:11px;color:var(--muted);font-weight:700}
+.card-b{padding:12px}
+.badge{font-family:'Space Mono';font-size:9px;font-weight:700;letter-spacing:.3px;padding:2px 6px;border:1.5px solid var(--ink);text-transform:uppercase;white-space:nowrap;display:inline-block}
+.b-own{background:var(--paper)}.b-dep{background:#fff;border-style:dashed;color:var(--muted)}
+.b-code{background:var(--blue);color:#fff;border-color:var(--blue)}
+a.b-gh{background:var(--ink);color:var(--paper);text-decoration:none}a.b-gh:hover{background:var(--red);border-color:var(--red)}
+.pill{font-family:'Space Mono';font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.3px;border:1.5px solid var(--ink)}
+.muted{color:var(--muted)}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* status dot */
+.sdot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink);flex:none;background:#fff}
+.sdot.live{background:var(--green)}.sdot.prog{background:var(--yellow)}.sdot.proto{background:var(--blue)}
+.sdot.concept{background:#fff}.sdot.input{background:var(--red)}.sdot.tbc{background:#bbb}.sdot.done{background:var(--ink)}
+/* TODAY view */
+.hero{border:3px solid var(--ink);background:var(--ink);color:var(--paper);padding:16px;margin-bottom:16px;position:relative;overflow:hidden}
+.hero .lab{font-family:'Space Mono';font-size:10px;letter-spacing:2px;color:var(--yellow);text-transform:uppercase}
+.hero h2{font-family:'Archivo Black';font-size:clamp(20px,3.6vw,30px);line-height:1.02;margin:6px 0 8px;text-transform:uppercase}
+.hero .meta{font-family:'Space Mono';font-size:11px;color:#cfc8b6}
+.hero .act{margin-top:12px}
+.btn{font-family:'Space Mono';font-size:11px;font-weight:700;border:2px solid var(--ink);background:var(--paper);color:var(--ink);padding:7px 12px;cursor:pointer;text-transform:uppercase;letter-spacing:.4px;transition:.12s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:2px 2px 0 rgba(0,0,0,.4)}
+.btn.y{background:var(--yellow)}.btn.r{background:var(--red);color:#fff;border-color:var(--red)}.btn.b{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.ghost{background:transparent;color:var(--paper);border-color:var(--paper)}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.tcard{border:3px solid var(--ink);background:var(--card);display:flex;flex-direction:column}
+.tcard .top{display:flex;align-items:center;gap:7px;padding:8px 10px;border-bottom:2px solid var(--ink)}
+.tcard .top .code{font-family:'Space Mono';font-size:10px;font-weight:700;color:var(--muted)}
+.tcard .top .nm{font-family:'Archivo Black';font-size:12px;text-transform:uppercase;letter-spacing:-.2px}
+.tcard .cold{margin-left:auto;font-family:'Space Mono';font-size:8px;font-weight:700;background:var(--red);color:#fff;padding:1px 5px;text-transform:uppercase}
+.tcard .body{padding:10px;flex:1}
+.tcard .nxlab{font-family:'Space Mono';font-size:9px;letter-spacing:1px;color:var(--red);text-transform:uppercase;font-weight:700}
+.tcard .nx{font-size:14px;font-weight:700;line-height:1.25;margin:3px 0 6px}
+.tcard .small{font-size:12px;color:var(--muted);font-style:italic;border-left:3px solid var(--yellow);padding-left:8px;margin-bottom:8px}
+.tcard .foot{display:flex;align-items:center;gap:6px;padding:8px 10px;border-top:2px solid var(--hair);flex-wrap:wrap}
+.streak{font-family:'Space Mono';font-size:10px;font-weight:700}
+.mini{font-family:'Space Mono';font-size:9px;font-weight:700;border:1.5px solid var(--ink);background:var(--paper);padding:3px 6px;cursor:pointer;text-transform:uppercase}
+.mini:hover{background:var(--ink);color:var(--paper)}
+.mini.ai{background:var(--yellow)}
+/* GANTT */
+.board{border:3px solid var(--ink);background:var(--paper);overflow-x:auto}
+.gantt{min-width:1000px;position:relative}
+.grow{display:grid;grid-template-columns:330px repeat(12,1fr);border-bottom:1px solid var(--hair)}
+.ghead{position:sticky;top:0;z-index:6;background:var(--ink)}
+.ghead .c{color:var(--paper);font-family:'Space Mono';font-size:10px;font-weight:700;padding:9px 5px;text-align:center;border-left:1px solid #3a362c}
+.ghead .lbl{position:sticky;left:0;z-index:7;background:var(--ink);text-align:left;padding-left:12px;border-left:none}
+.qy{font-size:8px;opacity:.5;display:block}
+.gsec .band{grid-column:1/-1;display:flex;align-items:center;gap:9px;padding:7px 12px;border-top:3px solid var(--ink);border-bottom:2px solid var(--ink);cursor:pointer;position:sticky;left:0}
+.band h2{font-family:'Archivo Black';font-size:12px;text-transform:uppercase}
+.band .tag{font-family:'Space Mono';font-size:9px;color:var(--muted)}
+.band .rd{margin-left:auto;font-family:'Space Mono';font-size:10px;font-weight:700}
+.lbl{position:sticky;left:0;z-index:4;background:var(--card);border-right:3px solid var(--ink);padding:7px 9px 7px 20px;display:flex;flex-direction:column;gap:4px;justify-content:center;cursor:pointer}
+.grow:nth-child(even) .lbl{background:var(--paper2)}
+.tnm{font-size:12px;font-weight:600;line-height:1.2}
+.track{grid-column:2/-1;display:grid;grid-template-columns:repeat(12,1fr);position:relative}
+.track .gc{border-left:1px solid var(--hair);min-height:42px}
+.bar{position:absolute;top:8px;height:24px;border:2px solid var(--ink);display:flex;align-items:center;gap:4px;padding:0 6px;font-family:'Space Mono';font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer;box-shadow:2px 2px 0 rgba(0,0,0,.16)}
+.bar.hatch{background-image:repeating-linear-gradient(45deg,transparent 0 4px,rgba(0,0,0,.14) 4px 6px)}
+.bar.done{opacity:.5;text-decoration:line-through}
+.hidden{display:none!important}
+/* BOARD */
+.kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.kcol{border:3px solid var(--ink);background:var(--paper)}
+.kcol h4{font-family:'Space Mono';font-size:11px;font-weight:700;text-transform:uppercase;padding:8px 10px;border-bottom:3px solid var(--ink);background:var(--paper2);display:flex;justify-content:space-between}
+.kcol .kb{padding:8px;display:flex;flex-direction:column;gap:7px;min-height:60px}
+.ktask{border:2px solid var(--ink);background:var(--card);padding:7px 8px;cursor:pointer}
+.ktask .kc{font-family:'Space Mono';font-size:9px;color:var(--muted);font-weight:700}
+.ktask .kn{font-size:12px;font-weight:600;line-height:1.2;margin-top:2px}
+.ktask:hover{box-shadow:2px 2px 0 var(--ink);transform:translate(-1px,-1px)}
+/* DASHBOARD */
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.dcard{border:3px solid var(--ink);background:var(--card);padding:12px;display:flex;flex-direction:column;gap:8px}
+.ring{display:flex;align-items:center;gap:12px}
+.ring svg{flex:none}
+.ring .rv{font-family:'Archivo Black';font-size:22px;line-height:1}
+.ring .rl{font-family:'Space Mono';font-size:9px;color:var(--muted);text-transform:uppercase}
+.dmeta{font-family:'Space Mono';font-size:10px;color:var(--muted);line-height:1.7}
+.dn{font-family:'Archivo Black';font-size:13px;text-transform:uppercase;line-height:1}
+/* icons */
+.picon{display:inline-flex;vertical-align:middle;flex:none}
+.picon svg{display:block}
+/* repo button */
+.repo{font-family:'Space Mono';font-size:9px;font-weight:700;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);padding:3px 7px;text-decoration:none;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.repo:hover{background:var(--red);border-color:var(--red)}
+/* filters */
+.fbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:3px solid var(--ink);background:var(--paper);padding:9px 11px;margin-bottom:12px}
+.fbar .fl{font-family:'Space Mono';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.fbar select,.fbar input{border:2px solid var(--ink);background:var(--card);font-family:'Space Mono';font-size:11px;padding:5px 7px;font-weight:700}
+.fbar input[type=text]{min-width:120px}
+.fbar .clear{cursor:pointer;font-family:'Space Mono';font-size:10px;font-weight:700;border:2px solid var(--ink);background:var(--yellow);padding:5px 9px;text-transform:uppercase}
+/* momentum list */
+.mom{border:3px solid var(--ink);background:var(--card);margin-bottom:16px}
+.mom-h{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:3px solid var(--ink);background:var(--yellow)}
+.mom-h h3{font-family:'Archivo Black';font-size:13px;text-transform:uppercase}
+.mom-h .sub{font-family:'Space Mono';font-size:9px;margin-left:auto;text-transform:uppercase}
+.mrow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px dotted var(--hair)}
+.mrow:last-child{border-bottom:none}
+.mrow:hover{background:var(--paper2)}
+.mrow .mc{font-family:'Space Mono';font-size:9px;font-weight:700;color:var(--muted);white-space:nowrap}
+.mrow .mtxt{flex:1;font-size:14px;font-weight:700;line-height:1.25}
+.mrow .mtxt small{display:block;font-family:'Space Mono';font-size:9px;font-weight:400;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+.mrow .mstreak{font-family:'Space Mono';font-size:11px;font-weight:700;white-space:nowrap}
+.mrow .mbtn{font-family:'Space Mono';font-size:9px;font-weight:700;border:1.5px solid var(--ink);background:var(--paper);padding:4px 7px;cursor:pointer;text-transform:uppercase;white-space:nowrap}
+.mrow .mbtn:hover{background:var(--ink);color:var(--paper)}
+.mrow .mbtn.ai{background:var(--yellow)}
+.mrow .mbtn.done{background:var(--green);color:#fff;border-color:var(--green)}
+/* dependency overlay */
+#gwrap{position:relative}
+svg.deplines{position:absolute;top:0;left:0;pointer-events:none;z-index:3;overflow:visible}
+.linkchip{font-family:'Space Mono';font-size:8px;font-weight:700;color:var(--muted)}
+/* icon picker */
+.ipick{display:flex;flex-wrap:wrap;gap:5px}
+.ipick .ip{border:2px solid var(--hair);background:var(--card);padding:5px;cursor:pointer;border-radius:2px}
+.ipick .ip.on{border-color:var(--ink);background:var(--paper2)}
+.linkbadge{font-family:'Space Mono';font-size:8px;font-weight:700;border:1.5px solid var(--blue);color:var(--blue);background:#fff;padding:1px 5px;text-decoration:none}
+.linkbadge:hover{background:var(--blue);color:#fff}
+/* KNOX */
+.knox-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.ktable{border:3px solid var(--ink);background:var(--card);overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th{font-family:'Space Mono';font-size:9px;text-transform:uppercase;letter-spacing:.5px;background:var(--ink);color:var(--paper);padding:8px;text-align:left;position:sticky;top:0}
+td{padding:8px;border-bottom:1px solid var(--hair);font-size:12px;vertical-align:top}
+td.ref{font-family:'Space Mono';font-size:10px;color:var(--muted);white-space:nowrap}
+tr:hover td{background:var(--paper2)}
+.cls{font-family:'Space Mono';font-size:8px;font-weight:700;padding:2px 5px;border:1.5px solid var(--ink);white-space:nowrap}
+.cls.PUBLIC{background:var(--green);color:#fff;border-color:var(--green)}
+.cls.OFFICIAL{background:var(--paper)}
+.cls\.OS{background:var(--yellow)}
+.cls.SECRET{background:var(--red);color:#fff;border-color:var(--red)}
+.convention{border:3px solid var(--ink);background:var(--paper2);padding:12px;margin-bottom:12px;font-family:'Space Mono';font-size:11px;line-height:1.7}
+.convention b{color:var(--ink)}
+.convention .ex{background:var(--ink);color:var(--paper);padding:2px 6px;display:inline-block;margin:2px 0}
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(22,20,15,.6);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
+.scrim.on{display:flex}
+.modal{border:3px solid var(--ink);background:var(--paper);max-width:560px;width:100%;margin-top:20px}
+.modal-h{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:3px solid var(--ink);background:var(--ink);color:var(--paper)}
+.modal-h h3{font-family:'Archivo Black';font-size:14px;text-transform:uppercase;flex:1}
+.modal-h .x{cursor:pointer;font-family:'Space Mono';font-weight:700;font-size:18px}
+.modal-b{padding:14px;max-height:65vh;overflow-y:auto}
+.fld{margin-bottom:11px}
+.fld label{font-family:'Space Mono';font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;border:2px solid var(--ink);background:var(--card);padding:7px 9px;font-family:'Archivo';font-size:13px}
+.fld textarea{resize:vertical;min-height:54px}
+.fld.two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.subrow{display:flex;gap:6px;align-items:center;margin-bottom:5px}
+.subrow input[type=text]{flex:1}
+.subrow input[type=date]{width:135px}
+.subrow .del{cursor:pointer;color:var(--red);font-weight:700;font-family:'Space Mono';border:1.5px solid var(--red);padding:3px 7px;background:#fff}
+.modal-f{display:flex;gap:8px;padding:12px 14px;border-top:3px solid var(--ink);flex-wrap:wrap}
+.range{display:flex;align-items:center;gap:8px}
+.range input{flex:1}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);font-family:'Space Mono';font-size:11px;padding:10px 16px;border:2px solid var(--yellow);z-index:99;opacity:0;transition:.2s;pointer-events:none}
+.toast.on{opacity:1}
+/* footer key */
+.legend{border:3px solid var(--ink);background:var(--paper);padding:11px 14px;margin-top:14px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-family:'Space Mono';font-size:10px}
+.legend .li{display:flex;align-items:center;gap:5px}
+.foot{margin-top:12px;font-family:'Space Mono';font-size:10px;color:var(--muted);line-height:1.7}
+.foot b{color:var(--ink)}
+@media(max-width:640px){.hbtns{flex-wrap:wrap}.tgrid{grid-template-columns:1fr}.fld.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+<header>
+ <div class="hbar">
+  <div class="hmark"></div>
+  <div class="htitle"><h1>Venture Control</h1><div class="sub">PT Live Design · 16 ventures · year-started numbering 26·0PP</div></div>
+  <div class="hbtns">
+   <button onclick="doExport()">Export</button>
+   <button onclick="document.getElementById('imp').click()">Import</button>
+  </div>
+ </div>
+</header>
+<input type="file" id="imp" accept="application/json" style="display:none" onchange="doImport(event)">
+<nav id="nav"></nav>
+<div id="app"></div>
+<div class="foot" id="foot"></div>
+</div>
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<script>
+// ============================================================
+//  PT LIVE DESIGN — VENTURE CONTROL  ·  SEED DATA
+//  Year-started numbering (26.0PP). Sub-projects: 26.0PP.NN
+// ============================================================
+
+const SEED = {
+  meta: { version: "1.0", built: "2026-05-31", owner: "Pete Thickett / PT Live Design" },
+
+  // Codified taxonomies (single controlled glossary — JSP 441 principle)
+  projectTypes: ["Software","Hardware","IP","Creative","Service","Research","Platform","Career"],
+  execTypes:    ["Build","Design","Writing","Legal","Marketing","Partnership","Admin","Research","Finance"],
+  pubStages:    ["Concept","Pre-Alpha","Alpha","Beta","RC","Live"],   // RC = release candidate
+  statuses:     ["Live","In progress","Prototype","Concept","Needs input","Scope TBC","Done"],
+  classes:      ["PUBLIC","OFFICIAL","OFFICIAL-SENSITIVE","SECRET"],  // SECRET = reference only, never stored
+
+  projects: [
+    {
+      code:"26.001", name:"Vault-It", type:"Software", icon:"vault",
+      one:"Debt-to-ownership app: open finance engine plus a Claude thesis layer and an isometric house you build as your net worth grows. Release ladder: Pre-Alpha to Alpha (33 testers) to Beta (99 testers) to launch on all app stores.",
+      color:"#1f4ed8", deadline:"2027-01-31", readiness:60, pub:"Pre-Alpha", status:"In progress",
+      touched:"2026-05-31", streak:4, github:"https://github.com/FetaPit/Pareto-",
+      source:"Claude Code: Synthesize & publish Vault-It · primary focus",
+      smallest:"Open the repo and rename the HTML <title> from PurposeOS to Vault-It.",
+      tasks:[
+        {code:"26.001.01", name:"[PRE-ALPHA] Clear build blockers", exec:"Build", status:"In progress", deadline:"2026-06-10", who:"Claude Code", deps:[], subs:[
+          {n:"Rename title PurposeOS → Vault-It", d:"2026-06-03", done:false},
+          {n:"Upgrade Three.js 0.128 → 0.158", d:"2026-06-06", done:false},
+          {n:"Add Stocks tab (FFHF spec assumes it)", d:"2026-06-09", done:false}]},
+        {code:"26.001.02", name:"[PRE-ALPHA] Ship Journey Map module", exec:"Build", status:"In progress", deadline:"2026-06-15", who:"Claude Code", deps:["26.001.01"], subs:[
+          {n:"Stage 0–6 timeline component", d:"2026-06-11", done:false},
+          {n:"Keys-in-hand date calc", d:"2026-06-15", done:false}]},
+        {code:"26.001.03", name:"[PRE-ALPHA] Register data API keys", exec:"Admin", status:"Concept", deadline:"2026-06-12", who:"Pete", deps:[], subs:[
+          {n:"GoldAPI.io free key", d:"2026-06-11", done:false},
+          {n:"Alpha Vantage free key", d:"2026-06-12", done:false}]},
+        {code:"26.001.04", name:"[PRE-ALPHA] Deploy to GitHub Pages + mobile test", exec:"Build", status:"Concept", deadline:"2026-06-22", who:"Claude Code", deps:["26.001.02","26.001.03"], subs:[
+          {n:"Mobile test via local server", d:"2026-06-20", done:false},
+          {n:"Push + enable Pages", d:"2026-06-22", done:false}]},
+        {code:"26.001.05", name:"[PRE-ALPHA] Self-dogfood 2 weeks, fix top issues", exec:"Build", status:"Concept", deadline:"2026-06-30", who:"Pete", deps:["26.001.04"], subs:[
+          {n:"Daily use, log every snag", d:"2026-06-28", done:false},
+          {n:"Fix top 10 issues", d:"2026-06-30", done:false}]},
+
+        {code:"26.001.06", name:"[ALPHA·33] Accounts + cloud sync (auth)", exec:"Build", status:"Concept", deadline:"2026-07-15", who:"Claude Code", deps:["26.001.05"], subs:[
+          {n:"Supabase auth", d:"2026-07-08", done:false},
+          {n:"Per-user data store", d:"2026-07-15", done:false}]},
+        {code:"26.001.07", name:"[ALPHA·33] In-app feedback + bug capture", exec:"Build", status:"Concept", deadline:"2026-07-18", who:"Claude Code", deps:["26.001.06"], subs:[]},
+        {code:"26.001.08", name:"[ALPHA·33] Recruit 33 alpha testers", exec:"Marketing", status:"Concept", deadline:"2026-07-20", who:"Pete", deps:["26.001.05"], subs:[
+          {n:"Tester sign-up form + expectations note", d:"2026-07-10", done:false},
+          {n:"Pick 33 from r/UKInvesting, T212, network", d:"2026-07-20", done:false}]},
+        {code:"26.001.09", name:"[ALPHA·33] Run closed alpha + weekly iterate", exec:"Build", status:"Concept", deadline:"2026-08-25", who:"Pete", deps:["26.001.06","26.001.07","26.001.08"], subs:[
+          {n:"Weekly build + changelog to testers", d:"2026-08-01", done:false},
+          {n:"Triage feedback into backlog", d:"2026-08-20", done:false}]},
+        {code:"26.001.10", name:"[ALPHA·33] Alpha exit review — stability gate", exec:"Research", status:"Concept", deadline:"2026-08-31", who:"Pete", deps:["26.001.09"], subs:[
+          {n:"Crash-free + core loop holds before Beta", d:"2026-08-31", done:false}]},
+
+        {code:"26.001.11", name:"[BETA·99] React rebuild for scale", exec:"Build", status:"Concept", deadline:"2026-09-30", who:"Claude Code", deps:["26.001.10"], subs:[
+          {n:"React 18 + Vite + R3F scaffold", d:"2026-09-10", done:false},
+          {n:"Port isometric house + tabs", d:"2026-09-22", done:false},
+          {n:"Zustand → Supabase", d:"2026-09-30", done:false}]},
+        {code:"26.001.12", name:"[BETA·99] Open banking via regulated AISP", exec:"Build", status:"Concept", deadline:"2026-10-15", who:"Claude Code", deps:["26.001.11"], subs:[
+          {n:"Integrate TrueLayer/Plaid (they hold the FCA AISP permission)", d:"2026-10-08", done:false},
+          {n:"Consent + account-link flow", d:"2026-10-15", done:false}]},
+        {code:"26.001.13", name:"[BETA·99] Monetisation tiers live (Stripe)", exec:"Finance", status:"Concept", deadline:"2026-10-15", who:"Pete", deps:["26.001.11"], subs:[
+          {n:"Free / Founder £5 / Pro £15", d:"2026-10-12", done:false},
+          {n:"Founder offer locked for the 33 + 99 testers", d:"2026-10-15", done:false}]},
+        {code:"26.001.14", name:"[BETA·99] Scale to 99 testers", exec:"Marketing", status:"Concept", deadline:"2026-10-20", who:"Pete", deps:["26.001.10"], subs:[
+          {n:"Open waitlist, invite to 99", d:"2026-10-20", done:false}]},
+        {code:"26.001.15", name:"[BETA·99] Compliance + legal pack", exec:"Legal", status:"Concept", deadline:"2026-10-31", who:"Pete", deps:["26.001.12"], subs:[
+          {n:"Privacy policy + T&Cs + GDPR basis", d:"2026-10-25", done:false},
+          {n:"Financial-promotions check + 'not advice' framing", d:"2026-10-31", done:false}]},
+        {code:"26.001.16", name:"[BETA·99] Run beta + analytics + iterate", exec:"Build", status:"Concept", deadline:"2026-11-25", who:"Pete", deps:["26.001.12","26.001.13","26.001.14"], subs:[
+          {n:"Wire analytics + funnel", d:"2026-11-05", done:false},
+          {n:"Convert Founder upgrades", d:"2026-11-20", done:false}]},
+        {code:"26.001.17", name:"[BETA·99] Beta exit review — launch gate", exec:"Research", status:"Concept", deadline:"2026-11-30", who:"Pete", deps:["26.001.16","26.001.15"], subs:[
+          {n:"Retention + payment + stability thresholds met", d:"2026-11-30", done:false}]},
+
+        {code:"26.001.18", name:"[LAUNCH] Wrap as native apps (iOS + Android)", exec:"Build", status:"Concept", deadline:"2026-12-20", who:"Claude Code", deps:["26.001.17"], subs:[
+          {n:"Capacitor wrap + native shell", d:"2026-12-12", done:false},
+          {n:"Push notifications + deep links", d:"2026-12-20", done:false}]},
+        {code:"26.001.19", name:"[LAUNCH] Store assets + listings (ASO)", exec:"Design", status:"Concept", deadline:"2026-12-20", who:"Pete", deps:["26.001.17"], subs:[
+          {n:"Icon, screenshots, preview video", d:"2026-12-14", done:false},
+          {n:"Listing copy + keywords", d:"2026-12-20", done:false}]},
+        {code:"26.001.20", name:"[LAUNCH] Submit to all app stores", exec:"Admin", status:"Concept", deadline:"2027-01-15", who:"Pete", deps:["26.001.18","26.001.19"], subs:[
+          {n:"Apple App Store review", d:"2027-01-10", done:false},
+          {n:"Google Play review", d:"2027-01-10", done:false},
+          {n:"Web PWA install path", d:"2027-01-15", done:false}]},
+        {code:"26.001.21", name:"[LAUNCH] Public launch campaign", exec:"Marketing", status:"Concept", deadline:"2027-01-31", who:"Pete", deps:["26.001.20"], subs:[
+          {n:"Launch post + tester testimonials", d:"2027-01-28", done:false},
+          {n:"Product Hunt / press / communities", d:"2027-01-31", done:false}]},
+        {code:"26.001.22", name:"[LAUNCH] Post-launch support + v1.1 roadmap", exec:"Admin", status:"Concept", deadline:"2027-02-28", who:"Pete", deps:["26.001.21"], subs:[]},
+        {code:"26.001.23", name:"[BETA·99] Integrate IP Vault tab (Bauhaus 21 visualiser)", exec:"Build", status:"Prototype", deadline:"2026-10-31", who:"Claude Code", deps:["26.001.11"], subs:[
+          {n:"Match Three.js version to house visualiser", d:"2026-10-20", done:false},
+          {n:"Wire prototypes/ip-vault → live tab", d:"2026-10-31", done:false}]}
+      ]
+    },
+    {
+      code:"26.002", name:"SUB-Terrainian", type:"Software", icon:"vinyl",
+      one:"On-device discography builder + Web3 ownership layer: MusicBrainz-anchored metadata, synced lyrics, album art, soulbound physical proof + limited-edition NFTs on Base. Android-first (Termux) with an installable Flask PWA dashboard.",
+      color:"#7c3aed", deadline:"2026-12-31", readiness:65, pub:"Alpha", status:"In progress",
+      touched:"2026-06-05", streak:1, github:"https://github.com/FetaPit/SUB-Terrainian",
+      source:"Claude Code: Project handover + music industry advice · branch: claude/project-handover-music-advice-0zVQ0",
+      smallest:"On Termux: git pull, then python poc/demo.py --sample 20 to prove the pipeline.",
+      tasks:[
+        {code:"26.002.01", name:"[DONE] Sprint 1 — Base smart contracts", exec:"Build", status:"Done", deadline:"2026-05-31", who:"Claude Code", deps:[], link:"https://github.com/FetaPit/SUB-Terrainian", subs:[
+          {n:"MusicEdition.sol — ERC-1155 + EIP-2981 limited editions", d:"2026-05-31", done:true},
+          {n:"PhysicalClaim.sol — EIP-5192 soulbound proof-of-ownership", d:"2026-05-31", done:true},
+          {n:"Foundry tests (23 total) + deploy script + REMIX_DEPLOY.md (Android browser deploy guide)", d:"2026-05-31", done:true}]},
+        {code:"26.002.02", name:"[DONE] Sprint 2 — Full 4-phase pipeline + Flask PWA", exec:"Build", status:"Done", deadline:"2026-06-03", who:"Claude Code", deps:["26.002.01"], link:"https://github.com/FetaPit/SUB-Terrainian", subs:[
+          {n:"db/manifest.py — SQLite schema + idempotent upserts for all phases", d:"2026-06-03", done:true},
+          {n:"metadata/ artwork/ portraits/ lyrics/ — all 4 enrichment phases built", d:"2026-06-03", done:true},
+          {n:"chain/flask_app.py — mobile-first dark PWA + SSE real-time pipeline runner", d:"2026-06-03", done:true},
+          {n:"sub_terrainian.py — CLI orchestrator (scan/art/port/lyr/emit/sync/serve)", d:"2026-06-03", done:true},
+          {n:"MediaStore sync via termux-media-scan (Samsung Music + Musicolet + Poweramp)", d:"2026-06-03", done:true}]},
+        {code:"26.002.03", name:"[DONE] Sprint 3 — PWA install + Settings page + Auto-open", exec:"Build", status:"Done", deadline:"2026-06-05", who:"Claude Code", deps:["26.002.02"], link:"https://github.com/FetaPit/SUB-Terrainian", subs:[
+          {n:"/manifest.json + /sw.js + /icon/<size> — Add to Home Screen ready", d:"2026-06-05", done:true},
+          {n:"/settings page — configure music path, API keys, contracts from browser", d:"2026-06-05", done:true},
+          {n:"Auto-open browser 1.5s after serve (termux-open-url → webbrowser fallback)", d:"2026-06-05", done:true}]},
+        {code:"26.002.04", name:"[DONE] PoC — demo runner + Musicolet outreach doc", exec:"Partnership", status:"Done", deadline:"2026-06-05", who:"Claude Code", deps:["26.002.02"], link:"https://github.com/FetaPit/SUB-Terrainian", subs:[
+          {n:"poc/demo.py — sample pipeline run + player compat coverage report + JSON output", d:"2026-06-05", done:true},
+          {n:"poc/MUSICOLET_PARTNERSHIP.md — three-phase outreach doc for Krosbits / Maulik Raviya", d:"2026-06-05", done:true}]},
+        {code:"26.002.05", name:"[UNBLOCK] Recover fetch_v3.py from Termux device", exec:"Build", status:"Needs input", deadline:"2026-06-08", who:"Pete", deps:[], subs:[
+          {n:"Copy fetch_v3.py off Termux → paste into artwork/fetch.py in repo", d:"2026-06-07", done:false},
+          {n:"Commit + push to branch claude/project-handover-music-advice-0zVQ0", d:"2026-06-08", done:false}]},
+        {code:"26.002.06", name:"[UNBLOCK] Register API keys + open decisions", exec:"Admin", status:"Needs input", deadline:"2026-06-10", who:"Pete", deps:[], subs:[
+          {n:"TheAudioDB: register key at theaudiodb.com under PT Live Design (replace shared key 123)", d:"2026-06-08", done:false},
+          {n:"Pinata: create account at pinata.cloud, generate JWT → paste into localhost:5000/settings", d:"2026-06-09", done:false},
+          {n:"DECIDE: folder.jpg at 600px or full CAA resolution? (open decision #4)", d:"2026-06-10", done:false}]},
+        {code:"26.002.07", name:"First real pipeline run on Termux music library", exec:"Build", status:"Concept", deadline:"2026-06-15", who:"Pete", deps:["26.002.05"], subs:[
+          {n:"git pull on Termux (branch: claude/project-handover-music-advice-0zVQ0)", d:"2026-06-12", done:false},
+          {n:"pip install -r requirements.txt", d:"2026-06-12", done:false},
+          {n:"python sub_terrainian.py scan ~/storage/shared/Music", d:"2026-06-12", done:false},
+          {n:"python poc/demo.py --sample 20 → review coverage % in poc/last_report.json", d:"2026-06-13", done:false},
+          {n:"python sub_terrainian.py serve → browser opens automatically, check dashboard", d:"2026-06-13", done:false}]},
+        {code:"26.002.08", name:"Musicolet outreach — send to Maulik Raviya / Krosbits", exec:"Partnership", status:"In progress", deadline:"2026-06-15", who:"Pete", deps:["26.002.07"], subs:[
+          {n:"Update real coverage % in poc/MUSICOLET_PARTNERSHIP.md after pipeline run", d:"2026-06-13", done:false},
+          {n:"Send email to Maulik Raviya — template is poc/MUSICOLET_PARTNERSHIP.md", d:"2026-06-14", done:false},
+          {n:"Follow up if no reply after 2 weeks", d:"2026-06-28", done:false}]},
+        {code:"26.002.09", name:"PWA polish — Add to Home Screen on Termux", exec:"Build", status:"Concept", deadline:"2026-06-30", who:"Pete", deps:["26.002.07"], subs:[
+          {n:"Chrome on Termux: confirm Add to Home Screen install prompt appears", d:"2026-06-25", done:false},
+          {n:"Launch from home screen — verify standalone mode (no browser chrome)", d:"2026-06-26", done:false}]},
+        {code:"26.002.10", name:"Deploy MusicEdition + PhysicalClaim to Base Sepolia", exec:"Build", status:"Concept", deadline:"2026-06-20", who:"Pete", deps:["26.002.06"], subs:[
+          {n:"Open remix.ethereum.org on Android Chrome — follow REMIX_DEPLOY.md", d:"2026-06-16", done:false},
+          {n:"Add Base Sepolia (Chain ID 84532) to MetaMask + get testnet ETH", d:"2026-06-17", done:false},
+          {n:"Deploy MusicEdition → copy address to /settings page", d:"2026-06-18", done:false},
+          {n:"Deploy PhysicalClaim → copy address to /settings page", d:"2026-06-18", done:false},
+          {n:"Verify both contracts on sepolia.basescan.org", d:"2026-06-20", done:false}]},
+        {code:"26.002.11", name:"Transmutation bridge — burnAndClaim() contract", exec:"Build", status:"Concept", deadline:"2026-07-15", who:"Claude Code", deps:["26.002.10"], subs:[
+          {n:"Add ERC1155Burnable extension to MusicEdition.sol", d:"2026-07-08", done:false},
+          {n:"Add burnAndClaim(tokenId, mbid) — burns edition token → issues soulbound receipt", d:"2026-07-10", done:false},
+          {n:"Foundry test: burn reduces supply, soulbound issued, double-redeem blocked", d:"2026-07-12", done:false},
+          {n:"Add /redeem/<token_id> Flask endpoint for shipping address collection", d:"2026-07-15", done:false}]},
+        {code:"26.002.12", name:"IPFS metadata — token URIs live", exec:"Build", status:"Concept", deadline:"2026-07-31", who:"Claude Code", deps:["26.002.10"], subs:[
+          {n:"Test chain/manifest_bridge.py against real manifest release", d:"2026-07-20", done:false},
+          {n:"Pin test metadata JSON to Pinata — verify IPFS URI resolves", d:"2026-07-24", done:false},
+          {n:"Write chain/pin_all.py — batch pin all minted releases to IPFS", d:"2026-07-31", done:false}]},
+        {code:"26.002.13", name:"First artist pilot — Project Redshift catalogue (26.005)", exec:"Marketing", status:"Concept", deadline:"2026-08-15", who:"Pete", deps:["26.002.11","26.002.12"], subs:[
+          {n:"Run full pipeline on Redshift catalogue (Pete's own releases)", d:"2026-08-05", done:false},
+          {n:"Mint limited edition 100 tokens on Base Sepolia", d:"2026-08-08", done:false},
+          {n:"Resell 1 test token on testnet — confirm EIP-2981 royalty fires automatically", d:"2026-08-10", done:false},
+          {n:"Screenshot royalty receipt — this is the demo reel for every label conversation", d:"2026-08-12", done:false}]},
+        {code:"26.002.14", name:"[v0.2] Win-Win-Win — label onboarding flow", exec:"Partnership", status:"Concept", deadline:"2026-11-30", who:"Pete", deps:["26.002.13"], subs:[
+          {n:"Design label onboarding: batch mint for catalogue releases", d:"2026-10-15", done:false},
+          {n:"Secondary royalty pitch deck: Discogs resale market currently earns labels zero", d:"2026-10-30", done:false},
+          {n:"Pilot with one label contact (after Redshift demo proves the model)", d:"2026-11-30", done:false}]}
+      ]
+    },
+    {
+      code:"26.003", name:"Bauhaus 21", type:"IP", icon:"bauhaus",
+      one:"The patentable core: link a physical record (LP, CD, tape) to its digital files, with the artwork acting as copyright and licence verification, plus offline-player integration.",
+      color:"#d6402c", deadline:"2026-08-31", readiness:10, pub:"Concept", status:"Concept",
+      touched:"2026-05-20", streak:0, github:"",
+      source:"Memory TODO + philosophy thread",
+      smallest:"Open a blank doc and write the one-sentence claim: what the mechanism does that nothing else does.",
+      tasks:[
+        {code:"26.003.01", name:"One-pager + provisional patent outline", exec:"Writing", status:"Concept", deadline:"2026-06-15", who:"Pete", deps:[], subs:[
+          {n:"Plain-English mechanism one-pager", d:"2026-06-08", done:false},
+          {n:"Provisional claims outline", d:"2026-06-15", done:false}]},
+        {code:"26.003.02", name:"File provisional patent (sub-project)", exec:"Legal", status:"Concept", deadline:"2026-07-31", who:"Pete", deps:["26.003.01"], subs:[
+          {n:"IPO search + attorney sanity check", d:"2026-07-10", done:false},
+          {n:"Submit provisional", d:"2026-07-31", done:false}]},
+        {code:"26.003.03", name:"Build ownership-anchor into SUB-Terrainian", exec:"Build", status:"Concept", deadline:"2026-09-30", who:"Claude Code", deps:["26.003.02","26.002.02"], subs:[]}
+      ]
+    },
+    {
+      code:"26.004", name:"NFT Infinite Artwork", type:"IP", icon:"diamond",
+      one:"Dynamic, interactive, AI-powered album artwork as verifiable digital ownership: art that responds and evolves, minted to a release.",
+      color:"#ea580c", deadline:"2026-12-31", readiness:8, pub:"Concept", status:"Concept",
+      touched:"2026-05-17", streak:0, github:"",
+      source:"Project + chat: NFTs as verifiable digital ownership",
+      smallest:"Write three sentences: what changes in the artwork, what triggers it, and what the owner actually owns.",
+      tasks:[
+        {code:"26.004.01", name:"Concept + technical spec", exec:"Writing", status:"Concept", deadline:"2026-07-15", who:"Pete", deps:[], subs:[]},
+        {code:"26.004.02", name:"Prototype dynamic / AI artwork engine (sub-project)", exec:"Build", status:"Concept", deadline:"2026-09-30", who:"Claude Code", deps:["26.004.01"], subs:[]},
+        {code:"26.004.03", name:"Mint + launch with a Redshift release", exec:"Marketing", status:"Concept", deadline:"2026-12-15", who:"Pete", deps:["26.004.02","26.003.02","26.005.02"], subs:[]}
+      ]
+    },
+    {
+      code:"26.005", name:"Project Redshift", type:"Creative", icon:"star",
+      one:"Your recording-artist project: four singles out, international airplay, run on self-directed social campaigns. Doubles as proof of audience growth.",
+      color:"#db2777", deadline:"2026-08-31", readiness:70, pub:"Live", status:"Live",
+      touched:"2026-05-30", streak:6, github:"https://github.com/FetaPit/Project-Redshift",
+      source:"Claude Code: next actions + media coverage tracking",
+      smallest:"Pick the next single. Just name the track.",
+      tasks:[
+        {code:"26.005.01", name:"Next release plan + content audit", exec:"Marketing", status:"In progress", deadline:"2026-06-30", who:"Pete", deps:[], subs:[]},
+        {code:"26.005.02", name:"Release + airplay campaign (sub-project)", exec:"Marketing", status:"Concept", deadline:"2026-07-31", who:"Pete", deps:["26.005.01"], subs:[]},
+        {code:"26.005.03", name:"Catalogue as SUB-T / NFT flagship demo", exec:"Marketing", status:"Concept", deadline:"2026-08-31", who:"Pete", deps:["26.002.02","26.005.02"], subs:[]},
+        {code:"26.005.04", name:"Mobile studio build — Vario conversion (sub-project)", exec:"Build", status:"Concept", deadline:"2027-03-31", who:"Pete", deps:[], subs:[]}
+      ]
+    },
+    {
+      code:"26.006", name:"PeTe T", type:"Service", icon:"hub",
+      one:"Your solo artist-and-designer front door: one centralised hub that funnels people to your creative services and music.",
+      color:"#334155", deadline:"2026-07-31", readiness:35, pub:"Pre-Alpha", status:"In progress",
+      touched:"2026-05-29", streak:2, github:"",
+      source:"Project: PeTe T (starred)",
+      smallest:"List the five links the hub must have. Nothing else.",
+      tasks:[
+        {code:"26.006.01", name:"Build centralised creative-services link hub", exec:"Build", status:"In progress", deadline:"2026-06-30", who:"Pete", deps:[], subs:[]},
+        {code:"26.006.02", name:"Launch + funnel client work", exec:"Marketing", status:"Concept", deadline:"2026-07-31", who:"Pete", deps:["26.006.01"], subs:[]}
+      ]
+    },
+    {
+      code:"26.007", name:"PT Live Design (studio)", type:"Service", icon:"grid",
+      one:"The core studio: client design, brand and motion work. The cashflow engine that funds everything else.",
+      color:"#0f766e", deadline:"2026-12-31", readiness:80, pub:"Live", status:"Live",
+      touched:"2026-05-28", streak:3, github:"",
+      source:"Project: PT Live Design",
+      smallest:"Add one finished piece to the Canva portfolio.",
+      tasks:[
+        {code:"26.007.01", name:"Portfolio refresh (Canva)", exec:"Design", status:"In progress", deadline:"2026-06-30", who:"Pete", deps:[], subs:[
+          {n:"Add Vault-It, PurposeOS, Gratitood", d:"2026-06-20", done:false}]},
+        {code:"26.007.02", name:"Agency outreach (100+ list)", exec:"Marketing", status:"Concept", deadline:"2026-09-30", who:"Pete", deps:["26.007.01"], subs:[]},
+        {code:"26.007.03", name:"Gratitood final sign-off", exec:"Design", status:"In progress", deadline:"2026-06-15", who:"Pete", deps:[], subs:[]},
+        {code:"26.007.04", name:"Ongoing client delivery", exec:"Design", status:"Live", deadline:"", who:"Pete", deps:[], subs:[]}
+      ]
+    },
+    {
+      code:"26.008", name:"Live Fintech / FFHF", type:"Research", icon:"chart",
+      one:"A research product built on your own audited trading track record, monetised once the record and any regulatory gate are cleared.",
+      color:"#16a34a", deadline:"2027-05-31", readiness:25, pub:"Concept", status:"In progress",
+      touched:"2026-05-18", streak:0, github:"",
+      source:"Project: Live Fintech",
+      smallest:"Export this month's trading results to one clean sheet.",
+      tasks:[
+        {code:"26.008.01", name:"Build audited track record", exec:"Finance", status:"In progress", deadline:"", who:"Pete", deps:[], subs:[]},
+        {code:"26.008.02", name:"FFHF research product MVP", exec:"Build", status:"Concept", deadline:"2026-11-30", who:"Pete", deps:["26.001.06"], subs:[]},
+        {code:"26.008.03", name:"Monetise (research sub, post-gate)", exec:"Finance", status:"Concept", deadline:"2027-05-31", who:"Pete", deps:["26.008.01","26.008.02"], subs:[]}
+      ]
+    },
+    {
+      code:"26.009", name:"Daijishō", type:"Hardware", icon:"console",
+      one:"A mobile gaming console and emulation platform, with a platform-licensing model (the TAI angle) as the longer-term revenue.",
+      color:"#0ea5e9", deadline:"2027-03-31", readiness:12, pub:"Concept", status:"Concept",
+      touched:"2026-05-22", streak:0, github:"",
+      source:"Project: Daijishō Mobile Gaming Console + Emulation Platform",
+      smallest:"Write down the one thing this does that a Retroid or Anbernic doesn't.",
+      tasks:[
+        {code:"26.009.01", name:"Hardware spec + research", exec:"Research", status:"Concept", deadline:"2026-08-31", who:"Pete", deps:[], subs:[]},
+        {code:"26.009.02", name:"Prototype build (sub-project)", exec:"Build", status:"Concept", deadline:"2026-12-31", who:"Pete", deps:["26.009.01"], subs:[]},
+        {code:"26.009.03", name:"Platform licensing model (TAI)", exec:"Legal", status:"Concept", deadline:"2027-03-31", who:"Pete", deps:["26.009.02"], subs:[]}
+      ]
+    },
+    {
+      code:"26.010", name:"Plaza Futura", type:"IP", icon:"tower",
+      one:"A human-centred metropolis concept: energy-generative public space and solar envelope zoning, used as a consulting and thought-leadership asset.",
+      color:"#ca8a04", deadline:"2026-09-30", readiness:30, pub:"Alpha", status:"Concept",
+      touched:"2026-05-10", streak:0, github:"",
+      source:"Project / Canva whitepaper",
+      smallest:"Find one credible piezoelectric output figure (Tokyo Station) and write it down.",
+      tasks:[
+        {code:"26.010.01", name:"Fix energy figures + tighten whitepaper", exec:"Research", status:"Concept", deadline:"2026-06-30", who:"Pete", deps:[], subs:[
+          {n:"Replace piezo claims with verified data", d:"2026-06-20", done:false},
+          {n:"Reposition piezo as participatory not grid-scale", d:"2026-06-25", done:false}]},
+        {code:"26.010.02", name:"Expert validation + thought-leadership", exec:"Partnership", status:"Concept", deadline:"2026-09-30", who:"Pete", deps:["26.010.01"], subs:[]}
+      ]
+    },
+    {
+      code:"26.011", name:"Shiba After Dark", type:"Platform", icon:"moon",
+      one:"An ethical adult-creator platform on Shibarium with a $BARK token. IP documented and dated; a deliberate slow burn while capital is tight.",
+      color:"#92400e", deadline:"2027-05-31", readiness:15, pub:"Concept", status:"Concept",
+      touched:"2026-05-03", streak:0, github:"",
+      source:"Copyright Memorandum + Whitepaper v0.1",
+      smallest:"Run a free UK IPO trademark search on the name. Ten minutes.",
+      tasks:[
+        {code:"26.011.01", name:"UK trademark searches (name + $BARK)", exec:"Legal", status:"Concept", deadline:"2026-07-31", who:"Pete", deps:[], subs:[]},
+        {code:"26.011.02", name:"Founding-creator term sheets + Shibarium outreach", exec:"Partnership", status:"Concept", deadline:"2026-11-30", who:"Pete", deps:["26.011.01"], subs:[]}
+      ]
+    },
+    {
+      code:"26.012", name:"Career / FLA", type:"Career", icon:"steps",
+      one:"Future London Academy, Executive Programme for Design Leaders: application live and interviewed, Birch Fund grant essay submitted.",
+      color:"#7c2d12", deadline:"2026-06-30", readiness:60, pub:"Beta", status:"In progress",
+      touched:"2026-05-17", streak:1, github:"",
+      source:"Project: Future London Academy + NABS",
+      smallest:"Send a one-line status chase on the Birch Fund decision.",
+      tasks:[
+        {code:"26.012.01", name:"Chase FLA + Birch Fund outcome", exec:"Admin", status:"In progress", deadline:"2026-06-15", who:"Pete", deps:[], subs:[]}
+      ]
+    },
+    {
+      code:"26.013", name:"Vallum x Vice", type:"Creative", icon:"cross",
+      one:"INFERRED, NEEDS YOUR LINE: a collaboration or label/brand venture (most recently active project). Confirm the parties and the goal.",
+      color:"#9333ea", deadline:"", readiness:5, pub:"Concept", status:"Scope TBC",
+      touched:"2026-05-30", streak:0, github:"",
+      source:"Project: Vallum x Vice (active 11h ago)",
+      smallest:"Tell me in one line what Vallum x Vice is.",
+      tasks:[
+        {code:"26.013.01", name:"Define scope + objective", exec:"Writing", status:"Scope TBC", deadline:"", who:"Pete", deps:[], subs:[]}
+      ]
+    },
+    {
+      code:"26.014", name:"Infinite Value Glitch", type:"Service", icon:"bolt",
+      one:"Automated digital-income stack: AI training-data work (Scale, Outlier), 4K stock video, digital downloads and silver scouting, run mostly hands-off on your NAS. Your fastest-to-market earner. (Confirm this maps to your project.)",
+      color:"#0891b2", deadline:"2026-08-31", readiness:18, pub:"Pre-Alpha", status:"In progress",
+      touched:"2026-05-24", streak:0, github:"",
+      source:"Project: Infinite Value Glitch + chat: automated digital business strategy (15 Mar)",
+      smallest:"Sign up to one AI training-data platform (Outlier or Scale) and start onboarding.",
+      tasks:[
+        {code:"26.014.01", name:"AI training-data income (Scale / Outlier)", exec:"Admin", status:"Concept", deadline:"2026-06-30", who:"Pete", deps:[], subs:[
+          {n:"Apply + pass onboarding assessment", d:"2026-06-20", done:false}]},
+        {code:"26.014.02", name:"4K stock video pipeline (Figma Weave / Veo)", exec:"Build", status:"Concept", deadline:"2026-07-31", who:"Pete", deps:[], subs:[]},
+        {code:"26.014.03", name:"Digital downloads (prompt packs, Notion templates)", exec:"Build", status:"Concept", deadline:"2026-07-31", who:"Pete", deps:[], subs:[]},
+        {code:"26.014.04", name:"Self-host infra (n8n + Storj on TerraMaster NAS)", exec:"Build", status:"Concept", deadline:"2026-08-15", who:"Pete", deps:[], subs:[
+          {n:"Install n8n on NAS (replace Gumloop)", d:"2026-08-05", done:false},
+          {n:"Enable Storj hosting for passive income", d:"2026-08-15", done:false}]}
+      ]
+    },
+    {
+      code:"26.015", name:"PhoenixOS", type:"Software", icon:"flame",
+      one:"INFERRED, NEEDS YOUR LINE: likely a privacy-hardened or custom OS build, given your GrapheneOS-class threat model. Confirm scope and commercial angle.",
+      color:"#475569", deadline:"", readiness:5, pub:"Concept", status:"Scope TBC",
+      touched:"2026-05-24", streak:0, github:"",
+      source:"Project: PhoenixOS",
+      smallest:"Tell me in one line what PhoenixOS is.",
+      tasks:[
+        {code:"26.015.01", name:"Define scope + objective", exec:"Writing", status:"Scope TBC", deadline:"", who:"Pete", deps:[], subs:[]}
+      ]
+    },
+    {
+      code:"26.016", name:"OP MASSIVE", type:"Creative", icon:"burst",
+      one:"INFERRED, NEEDS YOUR LINE: no detail on record. Possibly a music or campaign project. Confirm what it is.",
+      color:"#a16207", deadline:"", readiness:5, pub:"Concept", status:"Scope TBC",
+      touched:"2026-05-10", streak:0, github:"",
+      source:"Project: OP MASSIVE",
+      smallest:"Tell me in one line what OP MASSIVE is.",
+      tasks:[
+        {code:"26.016.01", name:"Define scope + objective", exec:"Writing", status:"Scope TBC", deadline:"", who:"Pete", deps:[], subs:[]}
+      ]
+    }
+  ],
+
+  // ---------------- KNOX: IP / ASSET / COMMS REGISTER ----------------
+  // Index-and-link only. SECRET items are referenced, never stored.
+  // File ref convention (JSP 441-informed):
+  //   <ProjectRef>_<EXEC>_<DOCTYPE>_<ShortTitle>_<YYYYMMDD>_<vX.Y>_<CLASS>
+  knox: [
+    // Vault-It
+    {proj:"26.001", ref:"26.001_BLD_CODE_VaultItPrototype_20260508_v1.0_OFFICIAL", title:"Vault-It working prototype (single-file, 309KB)", type:"Code", cls:"OFFICIAL", loc:"Local + FetaPit/Pareto-", note:"Most advanced build. Source of truth = Claude Code repo."},
+    {proj:"26.001", ref:"26.001_BLD_DOC_ClaudeHandover_20260508_v1.0_OFFICIAL", title:"CLAUDE.md handover + rebuild prompt", type:"Doc", cls:"OFFICIAL", loc:"FetaPit/Pareto-", note:"Rebuild instructions for Phase 2."},
+    {proj:"26.001", ref:"26.001_BLD_SPEC_FFHFSpec_20260508_v1.0_OFFICIAL", title:"FFHF feature spec (assumes Stocks tab)", type:"Spec", cls:"OFFICIAL", loc:"Repo / chat", note:"Drives blocker 26.001.02."},
+    {proj:"26.001", ref:"26.001_BLD_SPEC_JourneyMapSpec_20260508_v1.0_OFFICIAL", title:"Journey Map Engineering Spec v1", type:"Spec", cls:"OFFICIAL", loc:"Repo / chat", note:"Drives 26.001.01."},
+    {proj:"26.001", ref:"26.001_LEG_REC_PriorArtRecord_20260508_v1.0_OFFICIAL-SENSITIVE", title:"Prior-art / trademark record", type:"Record", cls:"OFFICIAL-SENSITIVE", loc:"Local", note:"Dated 8 May 2026."},
+    {proj:"26.001", ref:"26.001_BLD_CODE_IPVaultPrototype_20260513_v0.1_OFFICIAL", title:"ip-vault.html — Bauhaus 21 IP-asset visualiser (Three.js isometric on blueprint plane) + CLAUDE.md handover", type:"Code", cls:"OFFICIAL", loc:"FetaPit/Pareto- : prototypes/ip-vault/", note:"Realises Bauhaus 21 (26.003) as a Vault-It tab. Feeds 26.001.08."},
+    // SUB-Terrainian
+    {proj:"26.002", ref:"26.002_BLD_CODE_FetchV3_20260523_v3.0_OFFICIAL", title:"fetch_v3.py — artwork fetcher", type:"Code", cls:"OFFICIAL", loc:"Termux device (NOT in repo yet)", note:"Recover into artwork/fetch.py (26.002.01)."},
+    {proj:"26.002", ref:"26.002_BLD_CODE_SyncLyricsFinal_20260524_v1.0_OFFICIAL", title:"sync-lyrics-final.sh — 5-tier synced-lyrics engine (LRCLIB exact/fuzzy, NetEase, LRCLIB plain, Lyrics.ovh)", type:"Code", cls:"OFFICIAL", loc:"Termux: ~/storage/shared/Music/Scripts For Music/", note:"WORKING. Title/artist cleanup, --retry-plain upgrade mode. Commit to repo."},
+    {proj:"26.002", ref:"26.002_BLD_DOC_Handover_20260523_v1.0_OFFICIAL", title:"SUB-Terrainian handover doc", type:"Doc", cls:"OFFICIAL", loc:"FetaPit/SUB-Terrainian", note:""},
+    {proj:"26.002", ref:"26.002_PTR_DOC_MusicoletStrategy_20260523_v1.0_OFFICIAL-SENSITIVE", title:"Musicolet partnership + verification-layer strategy", type:"Doc", cls:"OFFICIAL-SENSITIVE", loc:"Project: SUB-Terrainian", note:"Commercial terms."},
+    {proj:"26.002", ref:"26.002_BLD_CODE_Sprint1Contracts_20260531_v1.0_OFFICIAL", title:"Sprint 1 — MusicEdition.sol + PhysicalClaim.sol + Foundry test suite (23 tests)", type:"Code", cls:"OFFICIAL", loc:"https://github.com/FetaPit/SUB-Terrainian", note:"ERC-1155+EIP-2981 limited editions + EIP-5192 soulbound. Deploy via REMIX_DEPLOY.md on Android Chrome."},
+    {proj:"26.002", ref:"26.002_BLD_CODE_Sprint2Pipeline_20260603_v1.0_OFFICIAL", title:"Sprint 2 — 4-phase pipeline + Flask PWA + sub_terrainian.py orchestrator", type:"Code", cls:"OFFICIAL", loc:"https://github.com/FetaPit/SUB-Terrainian", note:"db/ metadata/ artwork/ portraits/ lyrics/ chain/ — all phases built. SSE runner. MediaStore sync for all local players."},
+    {proj:"26.002", ref:"26.002_BLD_CODE_Sprint3PWA_20260605_v1.0_OFFICIAL", title:"Sprint 3 — PWA manifest + service worker + /settings page + auto-open browser", type:"Code", cls:"OFFICIAL", loc:"https://github.com/FetaPit/SUB-Terrainian", note:"Installable to Android home screen. /settings writes .env from browser. /icon/<size> PIL-generated."},
+    {proj:"26.002", ref:"26.002_PTR_CODE_PoCDemo_20260605_v1.0_OFFICIAL", title:"poc/demo.py — coverage report runner + poc/MUSICOLET_PARTNERSHIP.md three-phase outreach template", type:"Code", cls:"OFFICIAL", loc:"https://github.com/FetaPit/SUB-Terrainian", note:"Run: python poc/demo.py --sample 20. Saves poc/last_report.json. Send MD to Maulik Raviya / Krosbits."},
+    // Bauhaus 21
+    {proj:"26.003", ref:"26.003_LEG_PAT_Bauhaus21Outline_PENDING_v0.1_OFFICIAL-SENSITIVE", title:"Bauhaus 21 one-pager + provisional patent outline", type:"Patent", cls:"OFFICIAL-SENSITIVE", loc:"TO BE CREATED (26.003.01)", note:"Does not exist yet. Highest IP priority."},
+    {proj:"26.003", ref:"26.003_WRT_DOC_Bauhaus21Philosophy_20260520_v0.1_PUBLIC", title:"Bauhaus 21 philosophy note", type:"Doc", cls:"PUBLIC", loc:"Chat / memory", note:"Craft + tech + social purpose; counter-movement framing."},
+    // NFT Infinite Artwork
+    {proj:"26.004", ref:"26.004_WRT_DOC_NFTConcept_20260517_v0.1_OFFICIAL-SENSITIVE", title:"NFT infinite-artwork concept notes", type:"Doc", cls:"OFFICIAL-SENSITIVE", loc:"Project / chat: NFTs as verifiable ownership", note:"Spec to be written (26.004.01)."},
+    // Project Redshift
+    {proj:"26.005", ref:"26.005_MKT_REC_AirplayLog_20260531_v1.0_OFFICIAL", title:"Airplay + media coverage log", type:"Record", cls:"OFFICIAL", loc:"FetaPit/Project-Redshift", note:"Planet Rock, Hard Rock Hell, BBC Lincs, intl."},
+    {proj:"26.005", ref:"26.005_BLD_CODE_VarioStudio_20260507_v0.1_OFFICIAL", title:"vario-studio.tsx — mobile studio layout tool", type:"Code", cls:"OFFICIAL", loc:"Repo / chat", note:"Feeds 26.005.04."},
+    {proj:"26.005", ref:"26.005_MKT_AST_SinglesMasters_x4_v1.0_OFFICIAL-SENSITIVE", title:"Four released singles (masters + art)", type:"Asset", cls:"OFFICIAL-SENSITIVE", loc:"DSPs + local masters", note:"Catalogue IP."},
+    // Studio + clients
+    {proj:"26.007", ref:"26.007_DES_AST_GratitoodSplash_20260507_v1.0_OFFICIAL-SENSITIVE", title:"Gratitood animated logo splash (Lottie JSON, 1080x1920)", type:"Asset", cls:"OFFICIAL-SENSITIVE", loc:"Client delivery", note:"Confirm final sign-off (26.007.03)."},
+    {proj:"26.007", ref:"26.007_DES_AST_PurposeOSDesign_20260508_v1.0_OFFICIAL-SENSITIVE", title:"PurposeOS client design (Vault-It lineage)", type:"Asset", cls:"OFFICIAL-SENSITIVE", loc:"FetaPit/Pareto- lineage", note:"Keep IP line clean vs Vault-It."},
+    {proj:"26.007", ref:"26.007_MKT_REC_AgencyOutreachList_20260508_v1.0_OFFICIAL-SENSITIVE", title:"UK agency outreach list (100+ with creative leads)", type:"Record", cls:"OFFICIAL-SENSITIVE", loc:"Local", note:"Drives 26.007.02."},
+    {proj:"26.007", ref:"26.007_DES_AST_Portfolio_20260531_v1.0_PUBLIC", title:"Portfolio site", type:"Asset", cls:"PUBLIC", loc:"https://ptlive.my.canva.site", note:""},
+    // Live Fintech
+    {proj:"26.008", ref:"26.008_FIN_REC_TradingTrackRecord_20260531_v1.0_OFFICIAL-SENSITIVE", title:"Trading 212 track record (defence/aerospace + UK dividend pies)", type:"Record", cls:"OFFICIAL-SENSITIVE", loc:"Trading 212 / local", note:"Underpins FFHF credibility."},
+    // Plaza Futura
+    {proj:"26.010", ref:"26.010_WRT_WPR_PlazaFuturaWhitepaper_20260508_v0.9_OFFICIAL", title:"Plaza Futura whitepaper", type:"Whitepaper", cls:"OFFICIAL", loc:"Canva", note:"FLAW: piezo energy figures wrong. Fix before sharing (26.010.01)."},
+    // Shiba After Dark
+    {proj:"26.011", ref:"26.011_LEG_MOI_ShibaCopyrightMemo_20260503_v1.0_OFFICIAL-SENSITIVE", title:"Copyright Memorandum of Intent", type:"Memo", cls:"OFFICIAL-SENSITIVE", loc:"Local", note:"Dated 3 May 2026."},
+    {proj:"26.011", ref:"26.011_WRT_WPR_ShibaWhitepaper_20260503_v0.1_OFFICIAL-SENSITIVE", title:"Shiba After Dark Whitepaper v0.1", type:"Whitepaper", cls:"OFFICIAL-SENSITIVE", loc:"Local", note:"$BARK token model."},
+    // Career
+    {proj:"26.012", ref:"26.012_WRT_ESS_BirchFundEssay_20260508_v1.0_OFFICIAL-SENSITIVE", title:"Birch Fund grant essay (designed PDF)", type:"Essay", cls:"OFFICIAL-SENSITIVE", loc:"Local", note:"Submitted. Bauhaus 21 framing."},
+    {proj:"26.012", ref:"26.012_ADM_DOC_FLAApplication_20260508_v1.0_OFFICIAL-SENSITIVE", title:"FLA Executive Programme application", type:"Doc", cls:"OFFICIAL-SENSITIVE", loc:"Local / FLA portal", note:"Interviewed."},
+    {proj:"26.012", ref:"26.012_WRT_CV_MasterCV_20260506_v1.0_OFFICIAL-SENSITIVE", title:"Master CV + tailored versions (Optima, Synthesia, Adobe)", type:"CV", cls:"OFFICIAL-SENSITIVE", loc:"Local", note:"IN2 + Babcock/RAF OTA centred."},
+    {proj:"26.001", ref:"26.001_ADM_PLN_ReleaseRoadmap_20260602_v1.0_OFFICIAL", title:"Vault-It release roadmap — Pre-Alpha → Alpha(33) → Beta(99) → all app stores", type:"Plan", cls:"OFFICIAL", loc:"Venture Control (26.001)", note:"Tester-gated ladder. Alpha exit + Beta exit are hard gates."},
+    {proj:"26.001", ref:"26.001_MKT_REC_TesterRegister_PENDING_v0.1_OFFICIAL-SENSITIVE", title:"Tester register (33 alpha, then 99 beta)", type:"Record", cls:"OFFICIAL-SENSITIVE", loc:"TO BE CREATED (26.001.08)", note:"Sign-up form + names + Founder-tier lock. Personal data: GDPR basis."},
+    {proj:"26.001", ref:"26.001_LEG_DOC_CompliancePack_PENDING_v0.1_OFFICIAL-SENSITIVE", title:"Compliance pack: privacy policy, T&Cs, financial-promotions check", type:"Doc", cls:"OFFICIAL-SENSITIVE", loc:"TO BE CREATED (26.001.15)", note:"Open banking via regulated AISP (TrueLayer/Plaid hold the FCA permission). 'Not financial advice' framing."},
+    {proj:"26.001", ref:"26.001_DES_CODE_IPVaultPrototype_20260513_v0.1_OFFICIAL", title:"IP Vault tab — Bauhaus 21 isometric IP dashboard (Three.js)", type:"Code", cls:"OFFICIAL", loc:"FetaPit/Pareto- · prototypes/ip-vault/ (ip-vault.html + CLAUDE.md)", note:"Beta integration (26.001.23). Realises the Bauhaus 21 (26.003) visual layer inside Vault-It."},
+    // Credentials pointer (never stored)
+    {proj:"26.014", ref:"26.014_RES_DOC_AutoIncomeStrategy_20260315_v1.0_OFFICIAL-SENSITIVE", title:"Automated digital-income strategy (AI training data, 4K stock video, downloads, silver scouting)", type:"Doc", cls:"OFFICIAL-SENSITIVE", loc:"Chat / memory (15 Mar)", note:"The 'infinity money glitch' = AI training-data demand."},
+    {proj:"26.014", ref:"26.014_BLD_REC_SelfHostInfra_20260315_v1.0_OFFICIAL", title:"Self-host infra plan: TerraMaster F2-220 NAS, self-hosted n8n, Storj hosting", type:"Record", cls:"OFFICIAL", loc:"Local / NAS", note:"Cost-reduction + passive income routes. Figma edu (Weave/Veo/Sora), Adobe CC, Synthesia in stack."},
+    {proj:"ALL", ref:"00.000_SEC_REF_Credentials_NEVER-STORED_v0_SECRET", title:"API keys, wallet seeds, passwords", type:"Reference", cls:"SECRET", loc:"VeraCrypt / password manager ONLY", note:"NEVER paste into Knox. This row is a pointer, not storage."}
+  ]
+};
+</script>
+<script>
+const MONTHS=["Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"];
+const M_YEAR=["26","26","26","26","26","26","26","27","27","27","27","27"];
+let STATE=structuredClone(SEED);
+let VIEW="today";
+let BF={proj:"all",exec:"all",who:"all",q:""};
+const SMAP={"Live":"live","In progress":"prog","Prototype":"proto","Concept":"concept","Needs input":"input","Scope TBC":"tbc","Done":"done"};
+
+/* ---------- ICONOGRAPHY (thematic glyph per project) ---------- */
+const GLYPH={
+ vault:'<path d="M3 9 L12 3 L21 9 V21 H3 Z"/><circle cx="12" cy="14" r="3.2"/><line x1="12" y1="14" x2="12" y2="17.5"/>',
+ vinyl:'<circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="0.8" fill="ink"/>',
+ bauhaus:'<circle cx="7" cy="8" r="3.4"/><path d="M14 4 L19 12 H9 Z"/><rect x="13" y="14" width="7" height="7"/>',
+ diamond:'<path d="M12 2 L21 12 L12 22 L3 12 Z"/><path d="M12 7 L16.5 12 L12 17 L7.5 12 Z" fill="none"/>',
+ star:'<path d="M12 2 L12 22 M2 12 L22 12 M5 5 L19 19 M19 5 L5 19" stroke-width="1.4"/><circle cx="12" cy="12" r="2.6" fill="col"/>',
+ hub:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="3.5" r="1.8"/><circle cx="12" cy="20.5" r="1.8"/><circle cx="3.5" cy="12" r="1.8"/><circle cx="20.5" cy="12" r="1.8"/><path d="M12 9 V5.3 M12 15 V18.7 M9 12 H5.3 M15 12 H18.7" stroke-width="1.3"/>',
+ grid:'<rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8" fill="none"/><rect x="3" y="13" width="8" height="8" fill="none"/><rect x="13" y="13" width="8" height="8"/>',
+ chart:'<rect x="3" y="14" width="4" height="7"/><rect x="10" y="9" width="4" height="12"/><rect x="17" y="4" width="4" height="17"/>',
+ console:'<rect x="2.5" y="6" width="19" height="12" rx="3"/><circle cx="7" cy="12" r="1.4" fill="ink"/><path d="M16 10 V14 M14 12 H18" stroke-width="1.4"/>',
+ tower:'<rect x="5" y="13" width="6" height="8"/><rect x="13" y="8" width="6" height="13"/><rect x="9" y="4" width="6" height="17" fill="none"/>',
+ moon:'<path d="M16 3 A9 9 0 1 0 16 21 A7 7 0 1 1 16 3 Z"/>',
+ steps:'<path d="M3 20 H8 V15 H13 V10 H18 V5 H21" fill="none" stroke-width="2"/>',
+ cross:'<rect x="3" y="3" width="18" height="18" fill="none"/><path d="M7 7 L17 17 M17 7 L7 17" stroke-width="2.2"/>',
+ bolt:'<path d="M13 2 L4 13 H11 L9 22 L20 10 H13 Z"/>',
+ flame:'<path d="M12 2 C8 7 6 9 6 14 a6 6 0 0 0 12 0 c0-3-2-5-3-8 -1 2-2 3-3 3 0-3 0-6 0-7 Z"/>',
+ burst:'<circle cx="12" cy="12" r="3" fill="col"/><path d="M12 2 V6 M12 18 V22 M2 12 H6 M18 12 H22 M5 5 L8 8 M16 16 L19 19 M19 5 L16 8 M8 16 L5 19" stroke-width="1.5"/>'
+};
+const GLYPH_NAMES=Object.keys(GLYPH);
+function iconSVG(name,color,size){
+ size=size||18; const body=(GLYPH[name]||GLYPH.grid).replace(/fill="col"/g,`fill="${color}"`).replace(/fill="ink"/g,'fill="#16140f"');
+ return `<span class="picon"><svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}33" stroke="#16140f" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${body}</svg></span>`;
+}
+function pIcon(p,size){ return iconSVG(p.icon||"grid",p.color,size); }
+
+function monthIndex(ds){ if(!ds) return 11; const d=new Date(ds); let i=(d.getFullYear()-2026)*12+(d.getMonth()-5); return Math.max(0,Math.min(11,i)); }
+function daysSince(ds){ if(!ds) return 999; return Math.floor((Date.now()-new Date(ds))/86400000); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function initSchedule(){ STATE.projects.forEach(p=>{ if(!p.icon)p.icon="grid"; p.tasks.forEach((t)=>{ if(t._endM===undefined){ t._endM=monthIndex(t.deadline); let depEnd=-1; (t.deps||[]).forEach(dc=>{const dt=findTask(dc);if(dt)depEnd=Math.max(depEnd,dt._endM!==undefined?dt._endM:monthIndex(dt.deadline));}); t._startM=Math.max(0,depEnd>=0?depEnd:t._endM-1); if(t._startM>t._endM)t._startM=t._endM; } if(t.link===undefined)t.link=""; }); }); }
+function findTask(code){ for(const p of STATE.projects){ const t=p.tasks.find(x=>x.code===code); if(t)return t; } return null; }
+function findProj(code){ return STATE.projects.find(p=>p.code===code); }
+function projOfTask(code){ return STATE.projects.find(p=>p.tasks.some(t=>t.code===code)); }
+function nextTask(p){ return p.tasks.find(t=>t.status!=="Done"&&t.status!=="Scope TBC") || p.tasks.find(t=>t.status!=="Done"); }
+function completion(p){ const tot=p.tasks.length||1; const done=p.tasks.filter(t=>t.status==="Done").length; return Math.round(done/tot*100); }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2200); }
+
+function renderNav(){
+ const views=[["today","Today"],["gantt","Gantt"],["board","Board"],["dash","Dashboard"],["knox","Vault-It Knox"]];
+ document.getElementById('nav').innerHTML=views.map(v=>`<button class="nav-btn ${VIEW===v[0]?'on':''}" onclick="go('${v[0]}')">${v[1]}</button>`).join("")+`<button class="nav-btn" style="margin-left:auto;background:var(--red);color:#fff;border-color:var(--red)" onclick="newProject()">+ New venture</button>`;
+}
+function go(v){ VIEW=v; renderNav(); render(); window.scrollTo(0,0); }
+
+/* ---------- TODAY ---------- */
+function renderToday(){
+ const active=STATE.projects.filter(p=>p.status!=="Scope TBC");
+ const ranked=[...active].sort((a,b)=>monthIndex(nextTask(a)?.deadline)-monthIndex(nextTask(b)?.deadline));
+ const hero=ranked[0]; const hn=hero?nextTask(hero):null;
+ let html=`<div class="hero">
+   <div class="lab">★ If you do one thing today</div>
+   <h2>${hero?hero.smallest:"All clear."}</h2>
+   <div class="meta">${hero?`${hero.code} · ${hero.name}${hn?` · then: ${hn.name}`:""}`:""}</div>
+   <div class="act row">
+     ${hero?`<button class="btn y" onclick="touch('${hero.code}')">✓ Done it · log streak</button>`:""}
+     ${hn?`<button class="btn ghost" onclick="toGoogleTask('${hn.code}')">→ Google Tasks</button>`:""}
+     <button class="btn ghost" onclick="sendTodayList()">→ Push whole list</button>
+   </div></div>`;
+ html+=`<div class="mom"><div class="mom-h">${iconSVG('bolt','#f2b705',18)}<h3>Momentum — one tiny step per venture</h3><span class="sub">${active.length} live</span></div>`;
+ ranked.forEach(p=>{
+   const ds=daysSince(p.touched); const cold=ds>14;
+   html+=`<div class="mrow">${pIcon(p,22)}<span class="mc">${p.code}</span>
+     <span class="mtxt">${p.smallest}<small>${p.name}${cold?` · COLD ${ds}d`:""}</small></span>
+     <span class="mstreak">🔥${p.streak||0}</span>
+     <button class="mbtn done" onclick="touch('${p.code}')">✓</button>
+     <button class="mbtn ai" onclick="aiSuggest('${p.code}')">✦</button></div>`;
+ });
+ html+=`</div>`;
+ html+=`<div class="tgrid">`;
+ ranked.forEach(p=>{
+   const t=nextTask(p); const ds=daysSince(p.touched); const cold=ds>14;
+   html+=`<div class="tcard">
+     <div class="top">${pIcon(p,20)}<span class="code">${p.code}</span><span class="nm">${p.name}</span>${cold?`<span class="cold">cold ${ds}d</span>`:""}</div>
+     <div class="body"><div class="nxlab">Next action</div><div class="nx">${t?t.name:"No open task"}</div>
+       <div class="small">▸ ${p.smallest}</div>${t&&t.deadline?`<div class="mono muted" style="font-size:11px">Due ${t.deadline} · ${t.exec}</div>`:""}</div>
+     <div class="foot"><span class="streak">🔥 ${p.streak||0}</span><button class="mini" onclick="touch('${p.code}')">✓ Touched</button>
+       ${t?`<button class="mini" onclick="openTask('${t.code}')">Open</button>`:""}${p.github?`<a class="repo" href="${p.github}" target="_blank">Repo ↗</a>`:""}</div></div>`;
+ });
+ html+=`</div>`;
+ const tbc=STATE.projects.filter(p=>p.status==="Scope TBC");
+ if(tbc.length){ html+=`<div class="card" style="margin-top:14px"><div class="card-h" style="background:#bbb"><span class="cdot" style="background:#fff"></span><h3>Scope TBC — need your one-liner</h3></div><div class="card-b row">${tbc.map(p=>`<button class="mini" onclick="openProj('${p.code}')">${pIcon(p,14)} ${p.code} ${p.name}</button>`).join("")}</div></div>`; }
+ return html;
+}
+
+/* ---------- GANTT ---------- */
+function renderGantt(){
+ let h=`<div id="gwrap"><div class="board" id="gboard"><div class="gantt" id="gantt"><svg class="deplines" id="deplines"></svg><div class="grow ghead"><div class="c lbl">Workstream / Task — tap to edit</div>${MONTHS.map((m,i)=>`<div class="c">${m}<span class="qy">${M_YEAR[i]}</span></div>`).join("")}</div>`;
+ STATE.projects.forEach(p=>{
+   h+=`<div class="gsec"><div class="grow"><div class="band" onclick="toggleSec('${p.code}')">
+     ${pIcon(p,18)}<h2>${p.code} ${p.name}</h2><span class="tag">${p.type} · ${p.pub}</span>
+     ${p.github?`<a class="repo" href="${p.github}" target="_blank" onclick="event.stopPropagation()" style="margin-left:8px">Repo ↗</a>`:""}
+     <span class="rd">${p.readiness}/100 <span id="tg-${p.code}">–</span></span></div></div>`;
+   p.tasks.forEach(t=>{
+     const span=Math.max(1,t._endM-t._startM+1);
+     const cls=(t.status==="Concept"||t.status==="Scope TBC")?" hatch":(t.status==="Done"?" done":"");
+     h+=`<div class="grow trow" data-sec="${p.code}"><div class="lbl" onclick="openTask('${t.code}')">
+       <div class="tnm">${t.code} · ${t.name}</div>
+       <div class="row"><span class="badge b-own">${t.who}</span>${t.deps&&t.deps.length?`<span class="badge b-dep">⛓ ${t.deps.join(' ')}</span>`:""}${t.who==="Claude Code"?'<span class="badge b-code">CODE</span>':""}${t.link?`<a class="linkbadge" href="${t.link}" target="_blank" onclick="event.stopPropagation()">FILE ↗</a>`:""}</div>
+     </div><div class="track">${MONTHS.map(()=>'<div class="gc"></div>').join("")}
+       <div class="bar${cls}" data-bar="${t.code}" style="left:calc(${t._startM}/12*100%);width:calc(${span}/12*100% - 5px);background:${p.color}33;border-color:${p.color}" onclick="openTask('${t.code}')">
+       <span class="sdot ${SMAP[t.status]}"></span>${MONTHS[t._startM]}${span>1?'–'+MONTHS[t._endM]:''}</div></div></div>`;
+   });
+   h+=`<div class="grow"><div class="lbl" style="padding-left:20px"><button class="mini" onclick="addTask('${p.code}')">+ Add task to ${p.code}</button></div><div class="track">${MONTHS.map(()=>'<div class="gc" style="min-height:30px"></div>').join("")}</div></div></div>`;
+ });
+ h+=`</div></div></div>`;
+ return h;
+}
+function toggleSec(code){ document.querySelectorAll(`.trow[data-sec="${code}"]`).forEach(r=>r.classList.toggle('hidden')); const tg=document.getElementById('tg-'+code); if(tg)tg.textContent=tg.textContent==="–"?"+":"–"; requestAnimationFrame(drawDepLines); }
+function drawDepLines(){
+ const gantt=document.getElementById('gantt'); const svg=document.getElementById('deplines'); if(!gantt||!svg)return;
+ const g=gantt.getBoundingClientRect();
+ svg.style.width=gantt.scrollWidth+'px'; svg.style.height=gantt.scrollHeight+'px';
+ let paths="";
+ STATE.projects.forEach(p=>{
+   p.tasks.forEach(t=>{
+     (t.deps||[]).forEach(dc=>{
+       if(!dc.startsWith(p.code))return;
+       const a=document.querySelector(`[data-bar="${dc}"]`), b=document.querySelector(`[data-bar="${t.code}"]`);
+       if(!a||!b)return; const ar=a.getBoundingClientRect(), br=b.getBoundingClientRect();
+       if(ar.width===0||br.width===0)return;
+       const x1=ar.right-g.left, y1=ar.top-g.top+ar.height/2, x2=br.left-g.left, y2=br.top-g.top+br.height/2, mx=x1+14;
+       paths+=`<path d="M${x1} ${y1} H${mx} V${y2} H${x2}" fill="none" stroke="${p.color}" stroke-width="1.6" stroke-dasharray="3 2" opacity="0.85"/>`;
+       paths+=`<circle cx="${x1}" cy="${y1}" r="2.6" fill="${p.color}" stroke="#16140f" stroke-width="1"/>`;
+       paths+=`<path d="M${x2-5} ${y2-4} L${x2} ${y2} L${x2-5} ${y2+4}" fill="none" stroke="${p.color}" stroke-width="1.6"/>`;
+     });
+   });
+ });
+ svg.innerHTML=paths;
+}
+
+/* ---------- BOARD (filterable) ---------- */
+function renderBoard(){
+ const cols=["Needs input","In progress","Prototype","Concept","Live","Done"];
+ const projOpts=`<option value="all">All ventures</option>`+STATE.projects.map(p=>`<option value="${p.code}" ${BF.proj===p.code?'selected':''}>${p.code} ${p.name}</option>`).join("");
+ const execOpts=`<option value="all">All categories</option>`+STATE.execTypes.map(e=>`<option ${BF.exec===e?'selected':''}>${e}</option>`).join("");
+ const whoSet=[...new Set([].concat(...STATE.projects.map(p=>p.tasks.map(t=>t.who))))];
+ const whoOpts=`<option value="all">All owners</option>`+whoSet.map(w=>`<option ${BF.who===w?'selected':''}>${w}</option>`).join("");
+ let h=`<div class="fbar"><span class="fl">Filter</span>
+   <select onchange="BF.proj=this.value;render()">${projOpts}</select>
+   <select onchange="BF.exec=this.value;render()">${execOpts}</select>
+   <select onchange="BF.who=this.value;render()">${whoOpts}</select>
+   <input type="text" placeholder="search…" value="${BF.q}" oninput="BF.q=this.value;render()">
+   <span class="clear" onclick="BF={proj:'all',exec:'all',who:'all',q:''};render()">Clear</span></div>`;
+ const all=[]; STATE.projects.forEach(p=>p.tasks.forEach(t=>all.push({t,p})));
+ const filt=all.filter(({t,p})=>(BF.proj==="all"||p.code===BF.proj)&&(BF.exec==="all"||t.exec===BF.exec)&&(BF.who==="all"||t.who===BF.who)&&(!BF.q||(t.name+t.code).toLowerCase().includes(BF.q.toLowerCase())));
+ h+=`<div class="kanban">`;
+ cols.forEach(c=>{
+   const items=filt.filter(x=>x.t.status===c);
+   h+=`<div class="kcol"><h4>${c}<span>${items.length}</span></h4><div class="kb">`;
+   items.forEach(({t,p})=>{ h+=`<div class="ktask" onclick="openTask('${t.code}')" style="border-left:5px solid ${p.color}"><div class="kc row" style="gap:5px">${pIcon(p,13)} ${t.code} · ${p.name}</div><div class="kn">${t.name}</div><div class="row" style="margin-top:4px"><span class="badge b-own">${t.exec}</span>${t.deadline?`<span class="mono muted" style="font-size:9px">${t.deadline}</span>`:""}${t.link?'<span class="linkbadge">FILE</span>':""}</div></div>`; });
+   h+=`</div></div>`;
+ });
+ h+=`</div>`;
+ return h;
+}
+
+/* ---------- DASHBOARD ---------- */
+function ring(v,color){ const r=20,c=2*Math.PI*r,off=c-(v/100)*c; return `<svg width="54" height="54" viewBox="0 0 54 54"><circle cx="27" cy="27" r="${r}" fill="none" stroke="#d4cdb9" stroke-width="6"/><circle cx="27" cy="27" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 27 27)"/></svg>`; }
+function renderDash(){
+ const tot=STATE.projects.length, live=STATE.projects.filter(p=>p.status==="Live").length, tbc=STATE.projects.filter(p=>p.status==="Scope TBC").length;
+ const avg=Math.round(STATE.projects.reduce((s,p)=>s+p.readiness,0)/tot);
+ let h=`<div class="card"><div class="card-h"><span class="cdot" style="background:var(--blue)"></span><h3>Portfolio</h3><span class="code">${tot} ventures · ${live} live · ${tbc} scope TBC · avg readiness ${avg}/100</span></div></div>`;
+ h+=`<div class="dgrid">`;
+ [...STATE.projects].sort((a,b)=>b.readiness-a.readiness).forEach(p=>{
+   const t=nextTask(p);
+   h+=`<div class="dcard" style="border-top:6px solid ${p.color}">
+     <div class="row">${pIcon(p,20)}<span class="mono muted" style="font-size:10px;font-weight:700">${p.code}</span><span class="sdot ${SMAP[p.status]}" style="margin-left:auto"></span></div>
+     <div class="dn">${p.name}</div>
+     <div class="ring">${ring(p.readiness,p.color)}<div><div class="rv">${p.readiness}</div><div class="rl">readiness /100</div></div></div>
+     <div class="dmeta">Stage: <b>${p.pub}</b> · ${p.status}<br>Type: ${p.type} · Tasks done: ${completion(p)}%<br>Deadline: ${p.deadline||"—"}</div>
+     <div class="row"><button class="mini" onclick="openProj('${p.code}')">Edit</button>${t?`<button class="mini" onclick="openTask('${t.code}')">Next</button>`:""}${p.github?`<a class="repo" href="${p.github}" target="_blank">Repo ↗</a>`:""}</div></div>`;
+ });
+ h+=`</div>`;
+ return h;
+}
+/* ---------- KNOX ---------- */
+function renderKnox(){
+ let h=`<div class="convention"><b>VAULT-IT KNOX — IP & ASSET REGISTER</b><br>
+   Index and link only. Real files stay in your encrypted storage (VeraCrypt). <b style="color:var(--red)">SECRET items (keys, seeds, passwords) are never stored here — only referenced.</b><br><br>
+   <b>File-reference convention (JSP 441-informed):</b><br>
+   <span class="ex">ProjectRef _ EXEC _ DOCTYPE _ ShortTitle _ YYYYMMDD _ vX.Y _ CLASS</span><br>
+   Versioning v0.1 draft to v1.0 approved · protective marking with formal review · retention reviewed at the 20-year point (PRA principle).</div>`;
+ const groups={}; STATE.knox.forEach(k=>{(groups[k.proj]=groups[k.proj]||[]).push(k);});
+ h+=`<div class="knox-h"><span class="mono muted" style="font-size:11px">${STATE.knox.length} registered items</span><button class="mini" onclick="addKnox()">+ Register a document</button></div>`;
+ h+=`<div class="ktable"><table><thead><tr><th>File reference</th><th>Title</th><th>Type</th><th>Class</th><th>Location / link</th><th>Note</th></tr></thead><tbody>`;
+ Object.keys(groups).sort().forEach(pc=>{
+   const pj=findProj(pc); const nm=pj?pj.name:(pc==="ALL"?"All projects":pc);
+   h+=`<tr style="background:var(--paper2)"><td colspan="6" class="mono" style="font-weight:700;font-size:10px">${pj?pIcon(pj,14):""} ${pc} · ${nm}</td></tr>`;
+   groups[pc].forEach(k=>{
+     const clsKey=k.cls==="OFFICIAL-SENSITIVE"?"OS":k.cls;
+     const loc=k.loc.startsWith("http")?`<a class="repo" href="${k.loc}" target="_blank">OPEN ↗</a>`:k.loc;
+     h+=`<tr><td class="ref">${k.ref}</td><td>${k.title}</td><td class="mono" style="font-size:10px">${k.type}</td><td><span class="cls ${clsKey}">${k.cls}</span></td><td style="font-size:11px">${loc}</td><td style="font-size:11px" class="muted">${k.note||""}</td></tr>`;
+   });
+ });
+ h+=`</tbody></table></div>`;
+ return h;
+}
+
+/* ---------- RENDER ROUTER ---------- */
+function render(){
+ const app=document.getElementById('app');
+ let v="";
+ if(VIEW==="today")v=renderToday();
+ else if(VIEW==="gantt")v=renderGantt()+legend();
+ else if(VIEW==="board")v=renderBoard();
+ else if(VIEW==="dash")v=renderDash();
+ else if(VIEW==="knox")v=renderKnox();
+ app.innerHTML=v;
+ document.getElementById('foot').innerHTML=`<b>Source-of-truth:</b> Claude Code repo &gt; Claude Project &gt; chat. <b>GitHub:</b> Vault-It → FetaPit/Pareto- · SUB-Terrainian → FetaPit/SUB-Terrainian · Redshift → FetaPit/Project-Redshift.<br><b>Blocked:</b> SUB-Terrainian needs fetch_v3.py recovered into artwork/fetch.py (26.002.01). <b>Persistence:</b> in-memory — Export often. Self-host on GitHub Pages for autosave.`;
+ if(VIEW==="gantt"){ const b=document.getElementById('gboard'); if(b)b.onscroll=()=>requestAnimationFrame(drawDepLines); requestAnimationFrame(()=>requestAnimationFrame(drawDepLines)); }
+}
+window.addEventListener('resize',()=>{ if(VIEW==="gantt")requestAnimationFrame(drawDepLines); });
+function legend(){ return `<div class="legend"><span class="li"><span class="sdot live"></span>Live</span><span class="li"><span class="sdot prog"></span>In progress</span><span class="li"><span class="sdot proto"></span>Prototype</span><span class="li"><span class="sdot concept"></span>Concept</span><span class="li"><span class="sdot input"></span>Needs input</span><span class="li"><span class="sdot tbc"></span>Scope TBC</span><span class="li" style="margin-left:auto"><svg width="22" height="12"><path d="M1 6 H10 V2 H16" fill="none" stroke="#16140f" stroke-width="1.6" stroke-dasharray="3 2"/><circle cx="1" cy="6" r="2.4" fill="#16140f"/></svg> dependency link</span></div>`; }
+
+/* ---------- ACTIONS ---------- */
+function touch(code){ const p=findProj(code); if(!p)return; if(p.touched!==today()){p.streak=(p.streak||0)+1;} p.touched=today(); toast(`🔥 ${p.name} streak ${p.streak} · ${today()}`); render(); }
+function toGoogleTask(code){ const t=findTask(code); const p=projOfTask(code); if(!t)return; const line=`[${t.code}] ${t.name}${t.deadline?` (due ${t.deadline})`:""} — ${p.name}`; copy(line); window.open("https://tasks.google.com/","_blank"); toast("Task copied — paste into Google Tasks"); }
+function sendTodayList(){ const lines=STATE.projects.filter(p=>p.status!=="Scope TBC").map(p=>{const t=nextTask(p);return t?`[${t.code}] ${t.name}${t.deadline?` (due ${t.deadline})`:""}`:null;}).filter(Boolean); copy(lines.join("\n")); window.open("https://tasks.google.com/","_blank"); toast(`${lines.length} next-actions copied for Google Tasks`); }
+function toCalendar(code){ const t=findTask(code); if(!t||!t.deadline)return toast("No deadline set"); const d=t.deadline.replace(/-/g,""); const nd=new Date(t.deadline);nd.setDate(nd.getDate()+1);const dn=nd.toISOString().slice(0,10).replace(/-/g,""); const url=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('['+t.code+'] '+t.name)}&dates=${d}/${dn}&details=${encodeURIComponent('PT Live Design · '+(projOfTask(code)?.name||''))}`; window.open(url,"_blank"); toast("Opening Google Calendar"); }
+function copy(txt){ try{navigator.clipboard.writeText(txt);}catch(e){ const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove(); } }
+
+async function aiSuggest(code){
+ const p=findProj(code); if(!p)return; toast("✦ Asking Claude…");
+ const tlist=p.tasks.map(t=>`${t.code} ${t.name} [${t.status}]`).join("; ");
+ const prompt=`You are helping someone with ADHD manage a venture. Project: "${p.name}" — ${p.one}. Current tasks: ${tlist}. Their current smallest action is: "${p.smallest}". Suggest ONE new, even smaller, concrete physical next action doable in under 15 minutes to build momentum. Reply with ONLY the action sentence, under 20 words, no preamble, no em dashes.`;
+ try{
+   const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+   const d=await r.json(); const txt=(d.content||[]).filter(x=>x.type==="text").map(x=>x.text).join(" ").trim();
+   if(txt){ p.smallest=txt.replace(/^["']|["']$/g,""); toast("✦ New smallest action set"); render(); } else throw new Error("empty");
+ }catch(e){ const t=nextTask(p); p.smallest=t&&t.subs&&t.subs.length?`Do just the first step: ${t.subs[0].n}.`:(t?`Open ${t.code} and spend 10 minutes only on: ${t.name}.`:"Pick any task and name its first 10-minute step."); toast("Offline — set a heuristic action"); render(); }
+}
+
+/* ---------- MODALS ---------- */
+function closeModal(){ document.getElementById('scrim').classList.remove('on'); }
+function openScrim(html){ document.getElementById('modal').innerHTML=html; document.getElementById('scrim').classList.add('on'); }
+
+function openTask(code){
+ const t=findTask(code); const p=projOfTask(code); if(!t)return;
+ const opts=(arr,sel)=>arr.map(o=>`<option ${o===sel?'selected':''}>${o}</option>`).join("");
+ const monthOpts=sel=>MONTHS.map((m,i)=>`<option value="${i}" ${i===sel?'selected':''}>${m} ${M_YEAR[i]}</option>`).join("");
+ openScrim(`<div class="modal-h">${pIcon(p,18)}<h3>${t.code}</h3><span class="x" onclick="closeModal()">✕</span></div>
+ <div class="modal-b">
+  <div class="fld"><label>Task name</label><input id="f-name" value="${esc(t.name)}"></div>
+  <div class="fld two"><div><label>Execution category</label><select id="f-exec">${opts(STATE.execTypes,t.exec)}</select></div><div><label>Status (state of play)</label><select id="f-status">${opts(STATE.statuses,t.status)}</select></div></div>
+  <div class="fld two"><div><label>Owner</label><input id="f-who" value="${esc(t.who)}"></div><div><label>Deadline</label><input type="date" id="f-deadline" value="${t.deadline||''}"></div></div>
+  <div class="fld two"><div><label>Start month</label><select id="f-start">${monthOpts(t._startM)}</select></div><div><label>End month</label><select id="f-end">${monthOpts(t._endM)}</select></div></div>
+  <div class="fld"><label>Depends on (space-separated codes — same-project deps draw link nodes)</label><input id="f-deps" value="${(t.deps||[]).join(' ')}" placeholder="26.001.02 26.003.01"></div>
+  <div class="fld"><label>Reference / file link (repo, doc, Drive, Canva…)</label><input id="f-link" value="${esc(t.link||'')}" placeholder="https://…"></div>
+  <div class="fld"><label>Sub-tasks (individual deadlines)</label><div id="subs">${(t.subs||[]).map((s,i)=>subRow(s,i)).join("")}</div><button class="mini" onclick="addSub()">+ Sub-task</button></div>
+ </div>
+ <div class="modal-f"><button class="btn r" onclick="saveTask('${code}')">Save</button><button class="btn y" onclick="toGoogleTask('${code}')">→ GTasks</button><button class="btn b" onclick="toCalendar('${code}')">→ Calendar</button><button class="btn" onclick="delTask('${code}')">Delete</button></div>`);
+}
+function subRow(s,i){ return `<div class="subrow" data-i="${i}"><input type="checkbox" ${s.done?'checked':''} class="s-done"><input type="text" class="s-n" value="${esc(s.n)}"><input type="date" class="s-d" value="${s.d||''}"><span class="del" onclick="this.parentNode.remove()">✕</span></div>`; }
+function addSub(){ document.getElementById('subs').insertAdjacentHTML('beforeend',subRow({n:"",d:"",done:false},Date.now())); }
+function collectSubs(){ return [...document.querySelectorAll('#subs .subrow')].map(r=>({n:r.querySelector('.s-n').value,d:r.querySelector('.s-d').value,done:r.querySelector('.s-done').checked})).filter(s=>s.n.trim()); }
+function saveTask(code){
+ const t=findTask(code); if(!t)return;
+ t.name=val('f-name'); t.exec=val('f-exec'); t.status=val('f-status'); t.who=val('f-who'); t.deadline=val('f-deadline');
+ t._startM=parseInt(val('f-start')); t._endM=parseInt(val('f-end')); if(t._startM>t._endM)t._startM=t._endM;
+ t.deps=val('f-deps').split(/\s+/).filter(Boolean); t.link=val('f-link'); t.subs=collectSubs();
+ const p=projOfTask(code); p.touched=today(); closeModal(); toast(`Saved ${code}`); render();
+}
+function delTask(code){ const p=projOfTask(code); p.tasks=p.tasks.filter(t=>t.code!==code); closeModal(); toast(`Deleted ${code}`); render(); }
+function addTask(pcode){ const p=findProj(pcode); const n=p.tasks.length+1; const code=`${pcode}.${String(n).padStart(2,'0')}`; p.tasks.push({code,name:"New task",exec:"Build",status:"Concept",deadline:"",who:"Pete",deps:[],subs:[],link:"",_startM:0,_endM:1}); openTask(code); }
+
+function iconPicker(sel){ return `<div class="ipick" id="ipick">${GLYPH_NAMES.map(n=>`<span class="ip ${n===sel?'on':''}" data-ic="${n}" onclick="pickIcon('${n}')">${iconSVG(n,'#16140f',20)}</span>`).join("")}</div><input type="hidden" id="p-icon" value="${sel}">`; }
+function pickIcon(n){ document.getElementById('p-icon').value=n; document.querySelectorAll('#ipick .ip').forEach(e=>e.classList.toggle('on',e.dataset.ic===n)); }
+
+function openProj(code){
+ const p=findProj(code); if(!p)return;
+ const opts=(arr,sel)=>arr.map(o=>`<option ${o===sel?'selected':''}>${o}</option>`).join("");
+ openScrim(`<div class="modal-h">${pIcon(p,18)}<h3>${p.code} ${esc(p.name)}</h3><span class="x" onclick="closeModal()">✕</span></div>
+ <div class="modal-b">
+  <div class="fld"><label>Venture name</label><input id="p-name" value="${esc(p.name)}"></div>
+  <div class="fld"><label>One-line description</label><textarea id="p-one">${esc(p.one)}</textarea></div>
+  <div class="fld two"><div><label>Project type</label><select id="p-type">${opts(STATE.projectTypes,p.type)}</select></div><div><label>Status (state of play)</label><select id="p-status">${opts(STATE.statuses,p.status)}</select></div></div>
+  <div class="fld two"><div><label>Publication stage</label><select id="p-pub">${opts(STATE.pubStages,p.pub)}</select></div><div><label>Project deadline</label><input type="date" id="p-deadline" value="${p.deadline||''}"></div></div>
+  <div class="fld"><label>Readiness to publish — <b id="rdv">${p.readiness}</b>/100</label><div class="range"><input type="range" min="0" max="100" id="p-readiness" value="${p.readiness}" oninput="document.getElementById('rdv').textContent=this.value"></div></div>
+  <div class="fld two"><div><label>Thematic icon (visual ID)</label>${iconPicker(p.icon||'grid')}</div><div><label>Colour</label><input type="color" id="p-color" value="${p.color}" style="height:40px"></div></div>
+  <div class="fld"><label>Smallest next action (momentum)</label><input id="p-small" value="${esc(p.smallest)}"></div>
+  <div class="fld"><label>GitHub repo</label><input id="p-gh" value="${p.github||''}" placeholder="https://github.com/FetaPit/…"></div>
+ </div>
+ <div class="modal-f"><button class="btn r" onclick="saveProj('${code}')">Save</button><button class="btn y" onclick="aiSuggest('${code}');closeModal()">✦ AI action</button><button class="btn" onclick="delProj('${code}')">Delete venture</button></div>`);
+}
+function saveProj(code){ const p=findProj(code); p.name=val('p-name');p.one=val('p-one');p.type=val('p-type');p.status=val('p-status');p.pub=val('p-pub');p.deadline=val('p-deadline');p.readiness=parseInt(val('p-readiness'));p.icon=val('p-icon');p.color=val('p-color');p.smallest=val('p-small');p.github=val('p-gh'); closeModal(); toast(`Saved ${p.name}`); render(); }
+function delProj(code){ if(STATE.projects.length<=1)return toast("Keep at least one"); STATE.projects=STATE.projects.filter(p=>p.code!==code); closeModal(); toast(`Deleted ${code}`); render(); }
+function newProject(){
+ let max=0; STATE.projects.forEach(p=>{const n=parseInt((p.code.split('.')[1]||"0"));if(n>max)max=n;});
+ const code=`26.${String(max+1).padStart(3,'0')}`;
+ const palette=["#1f4ed8","#d6402c","#16a34a","#7c3aed","#ea580c","#0ea5e9","#db2777","#ca8a04"];
+ const p={code,name:"New venture",type:"Software",icon:"grid",one:"Describe this venture in one line.",color:palette[STATE.projects.length%palette.length],deadline:"",readiness:5,pub:"Concept",status:"Concept",touched:today(),streak:0,github:"",source:"Created in-app",smallest:"Write the one-line description.",tasks:[{code:code+".01",name:"Define scope",exec:"Writing",status:"Concept",deadline:"",who:"Pete",deps:[],subs:[],link:"",_startM:0,_endM:1}]};
+ STATE.projects.push(p); toast(`Created ${code}`); openProj(code);
+}
+
+function addKnox(){ openScrim(`<div class="modal-h"><h3>Register document</h3><span class="x" onclick="closeModal()">✕</span></div><div class="modal-b">
+  <div class="fld two"><div><label>Project ref</label><input id="k-proj" placeholder="26.001"></div><div><label>Class</label><select id="k-cls">${STATE.classes.map(c=>`<option>${c}</option>`).join("")}</select></div></div>
+  <div class="fld"><label>Title</label><input id="k-title"></div>
+  <div class="fld two"><div><label>Type</label><input id="k-type" placeholder="Code / Doc / Patent…"></div><div><label>Exec</label><input id="k-exec" placeholder="BLD / LEG / WRT…"></div></div>
+  <div class="fld"><label>Location / link</label><input id="k-loc" placeholder="repo URL or VeraCrypt path"></div>
+  <div class="fld"><label>Note</label><input id="k-note"></div>
+ </div><div class="modal-f"><button class="btn r" onclick="saveKnox()">Register</button></div>`); }
+function saveKnox(){ const proj=val('k-proj')||"00.000"; const exec=(val('k-exec')||"DOC").toUpperCase(); const type=val('k-type')||"Doc"; const title=val('k-title')||"Untitled"; const cls=val('k-cls'); const date=today().replace(/-/g,''); const st=title.replace(/[^a-zA-Z0-9]/g,'').slice(0,18)||"Item"; const ref=`${proj}_${exec}_${type.slice(0,4).toUpperCase()}_${st}_${date}_v0.1_${cls}`; STATE.knox.push({proj,ref,title,type,cls,loc:val('k-loc'),note:val('k-note')}); closeModal(); toast("Registered to Knox"); render(); }
+
+/* ---------- UTIL ---------- */
+function val(id){ return document.getElementById(id).value; }
+function esc(s){ return (s||"").replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function doExport(){ const blob=new Blob([JSON.stringify(STATE,null,2)],{type:"application/json"}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`PTLD-VentureControl-${today()}.json`; a.click(); toast("Exported JSON — your backup"); }
+function doImport(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ try{STATE=JSON.parse(r.result); initSchedule(); toast("Imported"); render();}catch(err){toast("Bad file");} }; r.readAsText(f); }
+
+initSchedule(); renderNav(); render();
+</script>
+</body></html>
