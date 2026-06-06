@@ -323,7 +323,7 @@ const SEED = {
       color:"#7c3aed", deadline:"2026-12-31", readiness:65, pub:"Alpha", status:"In progress",
       touched:"2026-06-05", streak:1, github:"https://github.com/FetaPit/SUB-Terrainian",
       source:"Claude Code: Project handover + music industry advice · branch: claude/project-handover-music-advice-0zVQ0",
-      smallest:"On Termux: git pull, then python poc/demo.py --sample 20 to prove the pipeline.",
+      smallest:"Recover fetch_v3.py from Termux → paste into artwork/fetch.py → commit. This unblocks the full pipeline.",
       tasks:[
         {code:"26.002.01", name:"[DONE] Sprint 1 — Base smart contracts", exec:"Build", status:"Done", deadline:"2026-05-31", who:"Claude Code", deps:[], link:"https://github.com/FetaPit/SUB-Terrainian", subs:[
           {n:"MusicEdition.sol — ERC-1155 + EIP-2981 limited editions", d:"2026-05-31", done:true},
@@ -683,9 +683,19 @@ function renderNav(){
 function go(v){ VIEW=v; renderNav(); render(); window.scrollTo(0,0); }
 
 /* ---------- TODAY ---------- */
+function priorityScore(p){
+ const statusW={"Needs input":100,"In progress":80,"Live":70,"Prototype":60,"Concept":40,"Done":10,"Scope TBC":5};
+ const ds=daysSince(p.touched); const cold=ds>14;
+ let score=(statusW[p.status]||30);
+ score+=Math.min((p.streak||0)*3,30);
+ score+=Math.round((p.readiness||0)*0.3);
+ if(cold) score+=(p.status==="In progress"||p.status==="Live")?25:10;
+ const t=nextTask(p); if(t&&t.deadline){ const d=new Date(t.deadline); const diff=(d-new Date())/864e5; if(diff<14&&diff>=0) score+=20; if(diff<0) score+=35; }
+ return score;
+}
 function renderToday(){
- const active=STATE.projects.filter(p=>p.status!=="Scope TBC");
- const ranked=[...active].sort((a,b)=>monthIndex(nextTask(a)?.deadline)-monthIndex(nextTask(b)?.deadline));
+ const active=STATE.projects.filter(p=>p.status!=="Done");
+ const ranked=[...active].sort((a,b)=>priorityScore(b)-priorityScore(a));
  const hero=ranked[0]; const hn=hero?nextTask(hero):null;
  let html=`<div class="hero">
    <div class="lab">★ If you do one thing today</div>
